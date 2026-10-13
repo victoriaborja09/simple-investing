@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Investing Prototype</title>
+  <style>
+    :root {
+      --bg: #eef3f7;
+      --phone-bg: #f8fbfd;
+      --card: #ffffff;
+      --text: #0f2347;
+      --sub: #6b7a90;
+      --green: #1fc876;
+      --green-dark: #14b867;
+      --blue: #2e6ef7;
+      --blue-light: #55b6ff;
+      --teal: #53d88a;
+      --border: #dce6ef;
+      --danger: #ef675f;
+      --shadow: 0 16px 50px rgba(22, 46, 87, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f2f6fa 0%, #e9f0f5 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px;
+      gap: 18px;
+    }
+    .title-wrap {
+      text-align: center;
+      max-width: 820px;
+    }
+    .title-wrap h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+    .title-wrap p {
+      margin: 0;
+      color: var(--sub);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+    .prototype-wrap {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+    .side-panel {
+      width: 290px;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(220,230,239,0.95);
+      border-radius: 26px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(18, 43, 76, 0.08);
+    }
+    .side-panel h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .side-panel p,
+    .side-panel li {
+      color: var(--sub);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .side-panel ul {
+      padding-left: 18px;
+      margin: 10px 0 0;
+    }
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: #111;
+      border-radius: 42px;
+      padding: 10px;
+      box-shadow: 0 20px 60px rgba(17, 29, 54, 0.24);
+      position: relative;
+    }
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: var(--phone-bg);
+      border-radius: 34px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .island {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 118px;
+      height: 28px;
+      background: #0d1117;
+      border-radius: 16px;
+      z-index: 3;
+    }
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 18px 0;
+      gap: 12px;
+    }
+    .back-btn,
+    .lang-btn,
+    .ghost-btn {
+      border: none;
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(20, 39, 71, 0.05);
+    }
+    .back-btn { min-width: 42px; }
+    .lang-btn { padding-right: 36px; position: relative; }
+    .lang-btn:after {
+      content: '▾';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--sub);
+      font-size: 11px;
+    }
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      padding: 14px 0 6px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #d8e3ed;
+      transition: all 0.25s ease;
+    }
+    .dot.active {
+      width: 26px;
+      background: linear-gradient(90deg, var(--blue), var(--green));
+    }
+    .content {
+      flex: 1;
+      padding: 8px 20px 18px;
+      overflow: auto;
+      scrollbar-width: none;
+    }
+    .content::-webkit-scrollbar { display: none; }
+    h2 {
+      margin: 8px 0 8px;
+      font-size: 22px;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .subhead {
+      color: var(--sub);
+      font-size: 15px;
+      line-height: 1.45;
+      margin: 0 0 18px;
+    }
+    .hero-card {
+      background: linear-gradient(180deg, #f9ffff 0%, #edf9f5 100%);
+      border: 1px solid #d9f0e5;
+      border-radius: 24px;
+      padding: 22px 20px 18px;
+      overflow: hidden;
+      position: relative;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 17px;
+      margin-bottom: 12px;
+    }
+    .leaf {
+      width: 34px;
+      height: 34px;
+      background: radial-gradient(circle at 30% 30%, #8ce2ff 0%, #44d17d 70%);
+      border-radius: 18px 18px 18px 4px;
+      transform: rotate(-18deg);
+      position: relative;
+    }
+    .leaf:after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      right: -8px;
+      top: 4px;
+      background: radial-gradient(circle at 30% 30%, #a1f3cd 0%, #3bc99b 70%);
+      border-radius: 18px 18px 4px 18px;
+      transform: rotate(24deg);
+    }
+    .mini-graph {
+      margin-top: 16px;
+      height: 180px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(106, 193, 255, 0.2), rgba(106, 193, 255, 0.02));
+      position: relative;
+      overflow: hidden;
+    }
+    .mini-graph svg,
+    .chart svg { width: 100%; height: 100%; }
+    .feature-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .feature-chip,
+    .small-card,
+    .option,
+    .step-card,
+    .info-box,
+    .risk-card,
+    .summary-card,
+    .lang-info,
+    .legend-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 4px 18px rgba(24, 46, 81, 0.04);
+    }
+    .feature-chip {
+      padding: 12px 10px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--sub);
+      line-height: 1.35;
+    }
+    .chip-icon,
+    .icon-circle {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .chip-icon.green, .icon-circle.green { background: rgba(31, 200, 118, 0.12); color: var(--green-dark); }
+    .chip-icon.blue, .icon-circle.blue { background: rgba(46, 110, 247, 0.12); color: var(--blue); }
+    .chip-icon.teal, .icon-circle.teal { background: rgba(85, 182, 255, 0.14); color: #2394db; }
+    .chip-icon.orange, .icon-circle.orange { background: rgba(255, 149, 63, 0.14); color: #f36c1d; }
+    .option {
+      padding: 14px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      cursor: pointer;
+    }
+    .option.selected { border: 2px solid var(--green); background: #f2fcf6; }
+    .option strong { display: block; font-size: 18px; margin-bottom: 3px; }
+    .option span { color: var(--sub); font-size: 13px; }
+    .radio {
+      margin-left: auto;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #b7c6d6;
+      flex: 0 0 auto;
+      position: relative;
+      margin-top: 5px;
+    }
+    .option.selected .radio { border-color: var(--green); }
+    .option.selected .radio:after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      background: var(--green);
+      border-radius: 50%;
+    }
+    .badge {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(31, 200, 118, 0.14);
+      color: #128850;
+      font-size: 11px;
+      font-weight: 700;
+      vertical-align: middle;
+    }
+    .info-box {
+      display: flex;
+      gap: 10px;
+      padding: 14px;
+      color: var(--sub);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+    .timeline {
+      position: relative;
+      padding-left: 10px;
+    }
+    .timeline:before {
+      content: '';
+      position: absolute;
+      left: 21px;
+      top: 8px;
+      bottom: 8px;
+      width: 3px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #41c97d, #7b62ff);
+      opacity: 0.28;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+    .step-num.one { background: var(--green); }
+    .step-num.two { background: var(--blue); }
+    .step-num.three { background: #7b62ff; }
+    .step-card { padding: 14px; }
+    .step-card strong { display: block; margin-bottom: 4px; font-size: 16px; }
+    .step-card p,
+    .risk-card p,
+    .summary-card p,
+    .legend-card p { margin: 0; color: var(--sub); font-size: 13px; line-height: 1.5; }
+    .portfolio-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .donut {
+      width: 180px;
+      height: 180px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: conic-gradient(var(--blue) 0 56%, var(--blue-light) 56% 70%, var(--green) 70% 100%);
+      position: relative;
+    }
+    .donut:after {
+      content: '';
+      position: absolute;
+      inset: 28px;
+      background: var(--card);
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+    .donut-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 1;
+      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .donut-center span { font-size: 34px; line-height: 1; }
+    .legend-list { display: flex; flex-direction: column; gap: 10px; }
+    .legend-item { display: grid; grid-template-columns: 12px 1fr auto; gap: 10px; align-items: start; }
+    .dot-key { width: 12px; height: 12px; border-radius: 999px; margin-top: 5px; }
+    .dot-key.us { background: var(--blue); }
+    .dot-key.intl { background: var(--blue-light); }
+    .dot-key.treasury { background: var(--green); }
+    .legend-item strong { display: block; font-size: 14px; }
+    .ticker { font-size: 13px; font-weight: 800; color: #198253; }
+    .toggle-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .toggle {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--sub);
+      border-radius: 999px;
+      padding: 8px 13px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .toggle.active { background: #ecf5ff; color: var(--blue); border-color: #cfe1f8; }
+    .chart {
+      height: 230px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 4px 18px rgba(24, 46, 81, 0.04);
+      margin-bottom: 12px;
+    }
+    .chart-note {
+      background: linear-gradient(180deg, #fff 0%, #f6fbff 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      color: var(--sub);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .risk-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .risk-card { padding: 14px; }
+    .risk-card strong { display: block; margin-bottom: 4px; font-size: 15px; }
+    .warning { background: #fff8f5; border-color: #f6d7cc; }
+    .success-check {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      margin: 6px auto 14px;
+      background: rgba(31, 200, 118, 0.14);
+      color: var(--green-dark);
+    }
+    .summary-card { padding: 14px; margin-bottom: 12px; }
+    .summary-row {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .summary-row:last-child { margin-bottom: 0; }
+    .summary-row strong { display: block; font-size: 14px; }
+    .bottom-bar {
+      padding: 10px 20px 22px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 18px;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 16px 18px;
+      width: 100%;
+      box-shadow: 0 8px 20px rgba(31, 200, 118, 0.24);
+      transition: transform 0.14s ease, opacity 0.14s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: linear-gradient(180deg, var(--green), var(--green-dark)); color: white; }
+    .btn.secondary { background: white; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+    .lang-menu {
+      position: absolute;
+      top: 88px;
+      right: 18px;
+      width: 180px;
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 40px rgba(20, 39, 71, 0.14);
+      border-radius: 18px;
+      padding: 8px;
+      z-index: 30;
+      display: none;
+    }
+    .lang-menu.open { display: block; }
+    .lang-item {
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      padding: 11px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .lang-item:hover { background: #f4f8fc; }
+    .small {
+      font-size: 12px;
+      color: var(--sub);
+    }
+    .hidden { display: none; }
+
+    .home-screen {
+      padding-top: 2px;
+    }
+    .home-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #1f9f5f;
+      margin-bottom: 8px;
+    }
+    .home-balance {
+      margin: 0;
+      font-size: 42px;
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      color: #0f1726;
+    }
+    .home-change {
+      margin: 8px 0 16px;
+      font-size: 14px;
+      color: #537058;
+      font-weight: 700;
+    }
+    .home-change.negative { color: #c2554f; }
+    .home-chart-wrap {
+      background: linear-gradient(180deg, #f9fff9 0%, #f4fff6 100%);
+      border: 1px solid #d8efdf;
+      border-radius: 28px;
+      padding: 16px 14px 12px;
+      box-shadow: 0 14px 32px rgba(33, 109, 68, 0.08);
+      margin-bottom: 14px;
+    }
+    .home-chart-svg {
+      width: 100%;
+      height: 230px;
+      display: block;
+    }
+    .home-axis-label {
+      fill: #8ca090;
+      font-size: 10px;
+    }
+    .home-grid { stroke: #e6f0e8; stroke-width: 1; }
+    .home-chart-caption {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+    .home-chart-caption strong { color: #1b2a43; }
+    .home-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .home-metric {
+      background: #fff;
+      border: 1px solid #dde8e2;
+      border-radius: 22px;
+      padding: 15px 16px;
+      box-shadow: 0 10px 24px rgba(18, 49, 34, 0.04);
+    }
+    .home-metric small {
+      display: block;
+      color: var(--sub);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .home-metric strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: #10233f;
+    }
+    .home-nav {
+      width: 100%;
+      background: #0e1118;
+      border-radius: 999px;
+      padding: 10px 10px 12px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      box-shadow: 0 14px 36px rgba(14, 17, 24, 0.28);
+    }
+    .home-nav-item {
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 6px 0 4px;
+      cursor: pointer;
+    }
+    .home-nav-item span {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+    .home-nav-item.active {
+      color: #fff;
+      font-weight: 700;
+    }
+    .home-nav-item.active span {
+      background: linear-gradient(180deg, #33d17c, #1fc876);
+      color: #08110c;
+    }
+
+
+
+    /* Seven brokerage chart windows, plus an honest market-data status. */
+    .account-range { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; }
+    .account-range button { padding:8px 0; font-size:10.5px; border-radius:999px; }
+    .account-chart-unavailable { height:204px; display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;text-align:center;background:#f7fbf8;border-radius:16px;padding:20px;color:#64796b;font-size:12px;line-height:1.45; }
+    .account-chart-unavailable strong { color:#1a3926;font-size:13px; }
+    .account-market-status { font-size:10px;color:#7b8c80;margin:5px 0 0;line-height:1.4; }
+    .account-market-status button { background:transparent;border:0;color:#179753;text-decoration:underline;font-weight:700;cursor:pointer;padding:0; }
+    .feed-dialog { position:absolute;inset:0;display:flex;align-items:flex-end;z-index:25;background:rgba(12,26,15,.32);padding:10px; }
+    .feed-dialog-body { background:#fff;border-radius:24px;padding:20px;width:100%;box-shadow:0 12px 42px rgba(0,0,0,.12); }
+    .feed-dialog-body h3 { margin:0 0 8px;font-size:19px;color:#1c3022; }
+    .feed-dialog-body p { color:#526657;font-size:13px;line-height:1.5; }
+    .feed-dialog-body label { display:block;font-size:12px;margin:15px 0 6px;color:#526657; }
+    .feed-dialog-body input { display:block;width:100%;min-width:0;padding:12px 10px;border:1px solid #d8e6da;border-radius:12px;font-size:12px; }
+    .feed-dialog-actions { display:flex;gap:8px;margin-top:14px; }
+    .feed-dialog-actions button { border:0;border-radius:12px;padding:12px;cursor:pointer;font-weight:700;flex:1; }
+    .feed-dialog-actions .confirm { background:#17c663;color:#0a2717; }
+    .feed-dialog-actions .cancel { background:#f1f5f1;color:#213b27; }
+
+    /* Fintech account preview, designed as a standalone mobile app screen. */
+    .screen.account-mode { background:#fff; }
+    .screen.account-mode .top-row { padding-top:4px; }
+    .screen.account-mode #backBtn { visibility:hidden; }
+    .content.is-home { padding:16px 19px 5px; }
+    .account-head { display:flex;align-items:center;justify-content:space-between;gap:8px;margin:5px 0 12px; }
+    .account-head strong { font-size:14px;font-weight:800;color:#121c17;letter-spacing:-.2px; }
+    .demo-pill { font-size:10px; color:#517365; background:#eef8f0;border:1px solid #d6eadb;padding:6px 9px;border-radius:20px;white-space:nowrap; }
+    .account-amount { font-size:47px;line-height:1.05;letter-spacing:-2.5px;font-weight:720;color:#111b16;margin:0; }
+    .account-gain { margin:8px 0 4px;color:#159950;font-size:14px;font-weight:700; }
+    .account-gain.negative { color:#d55258; }
+    .account-sub { font-size:11px;color:#86958b;margin-bottom:17px; }
+    .account-range { display:flex;gap:5px;align-items:center;margin-bottom:9px; }
+    .account-range button { flex:1;min-width:0;background:none;border:0;color:#8b9991;font-size:12px;font-weight:720;cursor:pointer;border-radius:14px;padding:7px 2px; }
+    .account-range button.active { background:#1ee86c;color:#102313; }
+    .account-chart { padding:2px 4px 0; border:0;background:#fff; }
+    .account-chart svg { display:block;width:100%;height:204px; }
+    .account-period { display:flex;justify-content:space-between;color:#93a09a;font-size:10.5px;margin:2px 0 13px; }
+    .account-tiles { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px; }
+    .account-tile { border-radius:18px;padding:14px;background:#f7faf8;border:1px solid #e5eee8; }
+    .account-tile small { display:block;color:#7b8e80;font-size:11px;margin-bottom:9px; }
+    .account-tile strong { font-size:24px;letter-spacing:-.8px;font-weight:780;color:#112018; }
+    .account-tile strong.positive { color:#14a25b; }
+    .account-section { display:flex;justify-content:space-between;align-items:center;margin:21px 0 11px; }
+    .account-section strong { color:#13241a;font-size:14px; }
+    .account-section span { font-size:10.5px;color:#91a098; }
+    .asset-mini-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
+    .asset-mini { min-width:0;background:#fff;border:1px solid #e3ece6;border-radius:16px;text-align:left;padding:11px 9px 10px;cursor:pointer;box-shadow:0 5px 14px rgba(0,42,10,.025); }
+    .asset-mini:hover,.asset-mini:focus-visible { border-color:#64ce8c;background:#f7fff8;outline:none; }
+    .asset-mini-top { display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#203629; }
+    .asset-mini-dot { display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+    .asset-mini-weight { margin-top:9px;font-size:18px;font-weight:800;color:#1a2c20; }
+    .asset-mini-ytd { margin-top:4px;font-size:10px;color:#159950;font-weight:700; }
+    .demo-disclosure { font-size:10px;color:#9aaa9f;margin:13px 0 10px;line-height:1.35; }
+    .home-nav { padding:8px 8px 9px;max-width:340px;margin:0 auto;background:#101613; }
+    .home-nav-item span { width:29px;height:29px;font-size:16px; }
+    .home-nav-item { font-size:10px;gap:2px;padding:4px 0; }
+    .screen.account-mode .bottom-bar { padding:6px 18px 16px; }
+    .sheet-overlay { position:absolute;inset:0;z-index:22;background:rgba(7,24,12,.34);display:flex;align-items:flex-end;padding:10px; }
+    .sheet-panel { width:100%;background:#fff;border-radius:26px;padding:18px 19px 24px;box-shadow:0 -12px 38px rgba(13,30,18,.14); }
+    .sheet-title-row { display:flex;justify-content:space-between;align-items:center;margin-bottom:13px; }
+    .sheet-title-row h3 { font-size:23px;margin:0;color:#112016; }
+    .sheet-close { font-size:17px;width:33px;height:33px;background:#f4f6f5;border:0;border-radius:50%;cursor:pointer; }
+    .sheet-panel p { font-size:13px;color:#56665e;line-height:1.5;margin:8px 0 10px; }
+    .sheet-stat-grid { display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:15px 0 5px; }
+    .sheet-stat { border-radius:15px;background:#f3f9f5;padding:12px; }
+    .sheet-stat small { display:block;color:#87968b;font-size:11px;margin-bottom:5px; }
+    .sheet-stat strong { font-size:17px;color:#153f25; }
+    .screen.loading-mode .top-row { display:none; }
+    .screen.loading-mode .content { padding:0; overflow:hidden; }
+    .screen.loading-mode .bottom-bar { display:none; }
+    .loading-screen { display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center;background:radial-gradient(circle at 50% 37%,#e8fff0 0%,#fff 54%); }
+    .loading-orbit { width:150px;height:150px;border-radius:50%;border:1px solid #cbebd5;display:grid;place-items:center;margin-bottom:28px;position:relative; }
+    .loading-orbit:before { content:"";position:absolute;inset:-2px;border:3px solid transparent;border-top-color:#1ec965;border-right-color:#98eeb0;border-radius:50%;animation:orbit 1.25s linear infinite; }
+    .loading-mark { display:flex;align-items:center;justify-content:center;background:#e8faec;border-radius:44px;width:98px;height:98px;color:#16b75a;font-size:50px;font-weight:500;animation:breathe 1.8s ease-in-out infinite; }
+    .loading-heading { font-size:28px;color:#12241a;letter-spacing:-1.1px;margin:0 0 10px;line-height:1.16; }
+    .loading-copy { color:#788e7d;font-size:14px;line-height:1.5;max-width:230px;margin:0 0 25px;min-height:42px; }
+    .loading-meter { width:180px;height:5px;border-radius:20px;background:#e6f3e9;overflow:hidden; }
+    .loading-meter-fill { height:100%;background:#16c766;border-radius:20px;transition:width .17s linear; }
+    .loading-caveat { font-size:11px;color:#9faea2;margin-top:17px; }
+    @keyframes orbit { to { transform:rotate(360deg); } }
+    @keyframes breathe { 50% { transform:scale(1.06); } }
+    @media(prefers-reduced-motion:reduce) { .loading-orbit:before,.loading-mark { animation:none!important; } }
+    .account-view { animation:homeAppear .45s ease-out both; }
+    @keyframes homeAppear { from {opacity:0;transform:translateY(8px);} to {opacity:1;transform:translateY(0);} }
+    @media(prefers-reduced-motion:reduce) { .account-view { animation:none; } }
+    .account-placeholder { padding:80px 18px 15px;text-align:center; }
+    .account-placeholder .bigicon { font-size:34px;color:#17b966;margin-bottom:12px; }
+    .account-placeholder h2 { color:#18321e;font-size:24px; }
+    .account-placeholder p { font-size:13px;color:#82968a;line-height:1.5; }
+    .account-tab-content { padding:3px 0; }
+    .account-tab-content .portfolio-diagram { margin-top:0; }
+    .account-tab-content .allocation-detail { background:#f4faf5; }
+
+    @media (max-width: 1040px) {
+      .side-panel { width: 390px; max-width: 100%; }
+    }
+
+    /* Compact month selection without explanatory subtitles. */
+    .option { width:100%; min-height:66px; align-items:center; justify-content:space-between; text-align:left; }
+    .option strong { margin:0; font-size:18px; }
+    .option .radio { margin:0; }
+    /* Keep every portfolio component above the fixed bottom action. */
+    .content.is-portfolio { padding-top:2px; padding-bottom:8px; }
+    .is-portfolio h2 { margin-top:3px; margin-bottom:6px; }
+    .is-portfolio .subhead { font-size:13px; line-height:1.4; margin-bottom:12px; }
+    /* Tappable portfolio composition with percentages anchored to the slices. */
+    .portfolio-diagram { width:100%; max-width:342px; margin:9px auto 7px; }
+    .portfolio-diagram svg { display:block; width:100%; overflow:visible; }
+    .donut-segment, .donut-label { cursor:pointer; outline:none; }
+    .donut-segment .donut-arc { transition:opacity .18s ease, filter .18s ease; }
+    .donut-segment:not(.selected) .donut-arc { opacity:.89; }
+    .donut-segment:hover .donut-arc, .donut-segment.selected .donut-arc { opacity:1; filter:drop-shadow(0 4px 5px rgba(19,54,95,.13)); }
+    .donut-label .pointer { stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    .donut-label .callout-box { fill:#fff; stroke:#dbe6ef; stroke-width:1; }
+    .donut-label.selected .callout-box { stroke:#a8bad4; stroke-width:1.5; }
+    .donut-label .callout-value { fill:#13294f; font-size:18px; font-weight:800; letter-spacing:-.6px; }
+    .donut-label .callout-name { fill:#667d96; font-size:10px; font-weight:700; letter-spacing:.2px; }
+    .donut-label:focus-visible .callout-box, .donut-segment:focus-visible .donut-arc { stroke:#0e2347; stroke-width:3; }
+    .allocation-detail { border-radius:19px; border:1px solid var(--border); background:#fff; padding:17px; margin-top:2px; min-height:122px; box-shadow:0 6px 18px rgba(26,51,89,.04); }
+    .allocation-detail-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+    .allocation-detail-dot { flex:0 0 auto; width:12px; height:12px; border-radius:50%; }
+    .allocation-detail-header strong { font-size:16px; flex:1; }
+    .allocation-detail-ticker { padding:5px 9px; border-radius:8px; background:#edf5fb; color:#3e647f; font-weight:800; font-size:11px; }
+    .allocation-detail p { color:var(--sub); font-size:13px; line-height:1.52; margin:0; }
+    .portfolio-hint { color:var(--sub); text-align:center; font-size:11px; margin:0 0 13px; }
+    /* Actual historical simulation view. */
+    .historical-toggles { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; margin:0 0 13px; }
+    .historical-toggles .toggle { padding:9px 3px; font-size:12px; }
+    .history-summary { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+    .history-summary>div { display:flex; flex-direction:column; gap:5px; background:#fff; border:1px solid var(--border); border-radius:16px; padding:13px; }
+    .history-summary small { color:var(--sub); font-size:11px; }
+    .history-summary strong { font-size:22px; letter-spacing:-.5px; }
+    .history-summary strong.positive { color:#13935c; }
+    .history-summary strong.negative { color:#dc554e; }
+    .historical-chart { height:250px; padding:9px 8px 12px; margin-bottom:10px; }
+    .historical-chart svg { height:184px; }
+    .history-legend { display:flex; justify-content:center; gap:17px; color:var(--sub); font-size:11px; margin-top:4px; }
+    .history-legend span { display:flex; align-items:center; gap:6px; }
+    .linekey { display:inline-block; width:18px; border-top:3px solid; }
+    .linekey.blue { border-color:var(--blue); }
+    .linekey.gray { border-color:#91a3bd; border-top-style:dashed; }
+    .linekey.red { border-color:#e56c66; }
+    .chart-mini-title { font-size:11px; font-weight:650; color:var(--sub); margin:0 0 2px 12px; }
+    .history-details { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:9px; font-size:12px; }
+    .history-details span { color:var(--sub); }
+    .historical-disclosure { margin:0 0 8px; color:var(--sub); font-size:10.8px; line-height:1.45; }
+    @media(max-width:520px) { body {padding:8px;gap:12px;} .phone {width:min(390px,100%);height:min(844px,calc(100dvh - 12px));} .title-wrap {display:none;} .side-panel {display:none;} }
+  </style>
+</head>
+<body>
+  <div class="title-wrap">
+    <h1>Simple Investing interactive prototype</h1>
+    <p>iPhone-style onboarding flow with clickable navigation, language support, a $50 monthly default, and a long-term investing explanation page.</p>
+  </div>
+
+  <div class="prototype-wrap">
+    <div class="side-panel">
+      <h3>Prototype notes</h3>
+      <p>This is designed as an app-style case study prototype, not a live brokerage product. The flow focuses on simplicity and confidence for first-time investors.</p>
+      <ul>
+        <li>Default contribution set to <strong>$50/month</strong></li>
+        <li>Portfolio uses <strong>56% SPYM, 14% VXUS, 30% SGOV</strong></li>
+        <li>Includes a <strong>language switcher</strong> for translated UI</li>
+        <li>Includes a <strong>long-term investing page</strong> with an interactive graph</li>
+      </ul>
+    </div>
+
+    <div class="phone">
+      <div class="screen">
+        <div class="island"></div>
+        <div class="status-bar">
+          <div>9:41</div>
+          <div aria-label="Signal and battery" style="font-size:12px;letter-spacing:1px;">● ▰▰▰</div>
+        </div>
+
+        <div class="top-row">
+          <button class="back-btn" id="backBtn">←</button>
+          <div style="flex:1"></div>
+          <button class="lang-btn" id="langBtn">🌐 <span id="langLabel">English</span></button>
+        </div>
+
+        <div id="progress" class="progress"></div>
+        <div id="langMenu" class="lang-menu"></div>
+        <div id="content" class="content"></div>
+        <div id="bottomBar" class="bottom-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const translations = {
+      en: {
+        langName: 'English',
+        donutMix: 'Portfolio mix',
+        donutHint: 'Tap a slice to learn what it holds',
+        spymDetail: 'Invests in around 500 of the largest U.S. companies, including businesses you probably recognize. This is our main source of long-term growth, but stock prices can rise and fall.',
+        vxusDetail: 'Invests in thousands of companies outside the U.S., across Europe, Asia, and emerging markets. It helps us avoid relying only on American stocks, though overseas markets can fall too.',
+        sgovDetail: 'Invests in short-term U.S. government debt called Treasury bills. These tend to move much less than stocks, helping steady your portfolio during market swings, although losses are still possible.',
+        monthlyResult: "With $50/month",
+        thousandExample: "What $50 each month would have grown to",
+
+        perMonth: "month",
+        tab6: "6 months",
+        tab10m: "10 months",
+        stocks: "Stocks",
+        intlLabel: "Global companies",
+        shortBills: "Short-term U.S. government debt",
+        portfolioValue: "Account value",
+        growth: "Investment growth",
+        deposits: "Deposits",
+        invested: "Your contributions",
+        underlyingReturn: "Portfolio return",
+        historicalNotice: "This chart shows how investing $50 each month in the portfolio would have grown from",
+        historicalMethod: "The line tracks the value of a $50 monthly contribution plan over the same period. Monthly rebalancing assumed. SPY is used as a proxy for SPYM. Distributions are reinvested. This is historical performance, not a forecast.",
+        to: "to",
+        historyChartAlt: "Historical chart of a $50 monthly investment plan",
+        downMonth: "balance decreased",
+        upMonth: "balance increased",
+
+        start: 'Get started',
+        continue: 'Continue',
+        finish: 'Finish',
+        welcomeTitle: 'Start investing with one simple portfolio.',
+        welcomeSub: 'Build long-term wealth automatically with a globally diversified portfolio.',
+        automated: 'Automated\ninvesting',
+        global: 'Translated UI',
+        beginner: 'Beginner\nfriendly',
+        amountTitle: 'Build wealth, simply',
+        amountSub: 'Choose how much you would like to invest each month. You can change this anytime.',
+        howTitle: 'How it works',
+        howSub: 'Investing made simple. You do the basics, we handle the rest.',
+        step1t: 'Add money monthly',
+        step1b: 'Choose an amount like $50 and we will withdraw it from your bank account.',
+        step2t: 'We invest it automatically',
+        step2b: 'Your money is invested in a diversified portfolio based on the target mix.',
+        step3t: 'Read it in your language',
+        step3b: 'Use the language menu to translate the app experience for better understanding and accessibility.',
+        portTitle: 'Your portfolio',
+        portSub: 'A simple diversified portfolio designed for the long term.',
+        usStocks: 'U.S. stocks',
+        intlStocks: 'International stocks',
+        treasuries: 'Treasury bills',
+        portNoteT: 'A balanced approach',
+        portNoteB: 'A mix of U.S. stocks, international stocks, and Treasury bills can support growth, diversification, and stability.',
+        longTitle: 'Think in years, not weeks',
+        longSub: 'Short-term returns can move up and down. The goal is steady long-term growth, not perfect months.',
+        tab1: '1 year',
+        tab5: '5 years',
+        tab10: '10 years',
+        longShort: 'In a shorter period, the portfolio can have red months. That is normal. A bad month does not mean the strategy is broken.',
+        longMid: 'Over several years, the path is still bumpy, but the trend can become clearer as contributions continue.',
+        longLong: 'Over a long horizon, recurring investing has historically had a better chance to grow despite short-term volatility. Returns are never guaranteed.',
+        riskTitle: 'Built for long-term investing',
+        riskSub: 'This portfolio is designed for steady progress over time, not quick wins.',
+        risk1t: 'Long-term growth',
+        risk1b: 'A diversified mix of U.S. and international stocks provides growth potential over time.',
+        risk2t: 'Lower volatility with Treasuries',
+        risk2b: 'Treasury bills can help reduce volatility and add stability to your portfolio.',
+        risk3t: 'Not for short-term cash needs',
+        risk3b: 'Investing involves risk and your balance can go up or down. This strategy is best for long-term goals.',
+        doneTitle: 'You are set!',
+        doneSub: 'Your automated investing plan is ready to go.',
+        summary1t: '$50 monthly',
+        summary1b: 'Auto-invest contribution',
+        summary2t: 'Simple Investing portfolio',
+        summary2b: '56% SPYM / 14% VXUS / 30% SGOV',
+        summary3t: 'Auto-invest starts next month',
+        summary3b: 'We will withdraw from your linked bank account.',
+        loadingTitle: 'Creating your portfolio',
+        loadingStages: ['Preparing your investments', 'Setting up monthly contributions', 'Your portfolio is ready'],
+        demoTitle: 'Sample account',
+        accountValue: 'Total portfolio value',
+        accountGrowth: 'Investment growth',
+        exampleAsOf: 'Sep 2026',
+        contributed: 'Contributed',
+        investmentsTitle: 'Your investments',
+        holdingsInfo: 'Tap for details',
+        accountNavHome: 'Home',
+        accountNavPortfolio: 'Portfolio',
+        accountNavLearn: 'Learn',
+        accountNavYou: 'You',
+        placeholderTitle: 'Coming next',
+        placeholderCopy: 'We will design this screen next.',
+        demoNote: 'Example account using historical ETF returns. Not live or a forecast.',
+        homeLabel: 'Portfolio',
+        homeChartAlt: 'Portfolio value over time for a monthly investing plan',
+        homeChartCaption: 'Portfolio value over time',
+        screenLabel: ['Welcome', 'Goal', 'How it works', 'Portfolio', 'Long term', 'Confirmation']
+      },
+      es: {
+        loadingStages: ['Preparando tus inversiones','Configurando aportaciones mensuales','Tu cartera está lista'],
+        loadingTitle: "Creando tu cartera",
+        demoTitle: "Cuenta de ejemplo",
+        accountGrowth: "Ganancia de inversión",
+        contributed: "Aportado",
+        investmentsTitle: "Tus inversiones",
+        holdingsInfo: "Toca para ver",
+        demoNote: "Cuenta de ejemplo con rendimientos históricos. No es una cuenta real ni una predicción.",
+        accountNavHome: "Inicio",
+        accountNavPortfolio: "Cartera",
+        accountNavLearn: "Aprender",
+        accountNavYou: "Tú",
+        placeholderTitle: "Próximamente",
+        placeholderCopy: "Diseñaremos esta pantalla después.",
+
+        langName: 'Español',
+        donutMix: 'Tu cartera',
+        donutHint: 'Toca un segmento para conocer su contenido',
+        spymDetail: 'Invierte en unas 500 de las empresas más grandes de Estados Unidos, incluidas muchas que probablemente conoces. Es nuestra principal fuente de crecimiento a largo plazo, aunque los precios de las acciones suben y bajan.',
+        vxusDetail: 'Invierte en miles de empresas fuera de Estados Unidos, en Europa, Asia y mercados emergentes. Ayuda a no depender solo de las acciones estadounidenses, aunque las bolsas internacionales también pueden caer.',
+        sgovDetail: 'Invierte en deuda del gobierno de Estados Unidos a corto plazo, conocida como letras del Tesoro. Su valor suele fluctuar mucho menos que el de las acciones y ayuda a estabilizar la cartera, aunque puede haber pérdidas.',
+        monthlyResult: "Con $50 al mes",
+        thousandExample: "Cómo habría crecido invertir $50 cada mes",
+
+        perMonth: "mes",
+        tab6: "6 meses",
+        tab10m: "10 meses",
+        stocks: "Acciones",
+        intlLabel: "Empresas globales",
+        shortBills: "Deuda pública a corto plazo",
+        portfolioValue: "Valor de la cuenta",
+        growth: "Ganancia de inversión",
+        deposits: "Aportaciones",
+        invested: "Tus aportaciones",
+        underlyingReturn: "Rentabilidad de la cartera",
+        historicalNotice: "Este gráfico muestra cómo habría crecido invertir $50 cada mes en la cartera desde",
+        historicalMethod: "La línea sigue el valor de un plan de inversión de $50 al mes durante el mismo periodo. Se asume rebalanceo mensual. SPY se usa como proxy de SPYM. Los dividendos se reinvierten. Esto es rendimiento histórico, no una predicción.",
+        to: "hasta",
+        historyChartAlt: "Gráfico histórico de un plan de inversión de $50 al mes",
+        downMonth: "el saldo bajó",
+        upMonth: "el saldo subió",
+
+        start: 'Empezar',
+        continue: 'Continuar',
+        finish: 'Finalizar',
+        welcomeTitle: 'Empieza a invertir con una sola cartera simple.',
+        welcomeSub: 'Construye patrimonio a largo plazo automáticamente con una cartera diversificada globalmente.',
+        automated: 'Inversión\nautomática',
+        global: 'Interfaz\ntraducida',
+        beginner: 'Apto para\nprincipiantes',
+        amountTitle: 'Construye patrimonio con simplicidad',
+        amountSub: 'Elige cuánto te gustaría invertir cada mes. Puedes cambiarlo cuando quieras.',
+        howTitle: 'Cómo funciona',
+        howSub: 'Invertir puede ser simple. Tú haces lo básico y nosotros nos encargamos del resto.',
+        step1t: 'Agrega dinero cada mes',
+        step1b: 'Elige una cantidad como $50 y la retiraremos de tu cuenta bancaria.',
+        step2t: 'Lo invertimos automáticamente',
+        step2b: 'Tu dinero se invierte en una cartera diversificada según la asignación objetivo.',
+        step3t: 'Léelo en tu idioma',
+        step3b: 'Usa el menú de idioma para traducir la experiencia de la app y facilitar la comprensión.',
+        portTitle: 'Tu cartera',
+        portSub: 'Una cartera simple y diversificada diseñada para el largo plazo.',
+        usStocks: 'Acciones de EE.UU.',
+        intlStocks: 'Acciones internacionales',
+        treasuries: 'Letras del Tesoro',
+        portNoteT: 'Un enfoque equilibrado',
+        portNoteB: 'Una mezcla de acciones de EE.UU., acciones internacionales y letras del Tesoro puede apoyar crecimiento, diversificación y estabilidad.',
+        longTitle: 'Piensa en años, no en semanas',
+        longSub: 'Los rendimientos de corto plazo pueden subir y bajar. La meta es crecimiento constante a largo plazo, no meses perfectos.',
+        tab1: '1 año',
+        tab5: '5 años',
+        tab10: '10 años',
+        longShort: 'En un periodo corto, la cartera puede tener meses en rojo. Eso es normal. Un mal mes no significa que la estrategia esté fallando.',
+        longMid: 'A lo largo de varios años, el camino sigue siendo irregular, pero la tendencia puede verse con más claridad a medida que continúan las aportaciones.',
+        longLong: 'En un horizonte largo, invertir de forma recurrente históricamente ha tenido más probabilidades de crecer a pesar de la volatilidad. Los rendimientos nunca están garantizados.',
+        riskTitle: 'Diseñado para invertir a largo plazo',
+        riskSub: 'Esta cartera está diseñada para un progreso constante con el tiempo, no para ganancias rápidas.',
+        risk1t: 'Crecimiento a largo plazo',
+        risk1b: 'Una mezcla diversificada de acciones de EE.UU. e internacionales ofrece potencial de crecimiento con el tiempo.',
+        risk2t: 'Menor volatilidad con bonos del Tesoro',
+        risk2b: 'Las letras del Tesoro pueden ayudar a reducir la volatilidad y aportar estabilidad a tu cartera.',
+        risk3t: 'No es para necesidades de efectivo a corto plazo',
+        risk3b: 'Invertir implica riesgo y tu saldo puede subir o bajar. Esta estrategia es mejor para metas de largo plazo.',
+        doneTitle: 'Todo listo',
+        doneSub: 'Tu plan de inversión automática está listo.',
+        summary1t: '$50 mensuales',
+        summary1b: 'Aportación de inversión automática',
+        summary2t: 'Cartera de Simple Investing',
+        summary2b: '56% SPYM / 14% VXUS / 30% SGOV',
+        summary3t: 'La inversión automática empieza el próximo mes',
+        summary3b: 'Retiraremos el dinero de tu cuenta bancaria vinculada.',
+        screenLabel: ['Inicio', 'Meta', 'Cómo funciona', 'Cartera', 'Largo plazo', 'Confirmación']
+      },
+      it: {
+        loadingStages: ['Preparazione degli investimenti','Impostazione dei versamenti mensili','Il tuo portafoglio è pronto'],
+        loadingTitle: "Creazione del portafoglio",
+        demoTitle: "Conto di esempio",
+        accountGrowth: "Crescita investimento",
+        contributed: "Versato",
+        investmentsTitle: "I tuoi investimenti",
+        holdingsInfo: "Tocca per dettagli",
+        demoNote: "Conto di esempio basato su rendimenti storici. Non è un conto reale né una previsione.",
+        accountNavHome: "Home",
+        accountNavPortfolio: "Portafoglio",
+        accountNavLearn: "Scopri",
+        accountNavYou: "Tu",
+        placeholderTitle: "Prossimamente",
+        placeholderCopy: "Progetteremo questa pagina in seguito.",
+
+        langName: 'Italiano',
+        donutMix: 'Il portafoglio',
+        donutHint: 'Tocca una sezione per scoprire cosa contiene',
+        spymDetail: "Investe in circa 500 delle maggiori società statunitensi, comprese molte aziende che conosci. È la principale fonte di potenziale crescita a lungo termine, ma il valore delle azioni può salire e scendere.",
+        vxusDetail: 'Investe in migliaia di società fuori dagli Stati Uniti, in Europa, Asia e mercati emergenti. Aiuta a non dipendere soltanto dalle azioni americane, anche se i mercati esteri possono perdere valore.',
+        sgovDetail: 'Investe in titoli di Stato statunitensi a brevissimo termine, chiamati Treasury bills. Tendono a oscillare molto meno delle azioni e aiutano a stabilizzare il portafoglio, ma sono comunque possibili perdite.',
+        monthlyResult: "Con $50 al mese",
+        thousandExample: "Come sarebbe cresciuto investire $50 ogni mese",
+
+        perMonth: "mese",
+        tab6: "6 mesi",
+        tab10m: "10 mesi",
+        stocks: "Azioni",
+        intlLabel: "Aziende globali",
+        shortBills: "Titoli di Stato a breve termine",
+        portfolioValue: "Valore del conto",
+        growth: "Guadagno dagli investimenti",
+        deposits: "Versamenti",
+        invested: "I tuoi versamenti",
+        underlyingReturn: "Rendimento del portafoglio",
+        historicalNotice: "Questo grafico mostra come sarebbe cresciuto investire $50 ogni mese nel portafoglio da",
+        historicalMethod: "La linea mostra il valore di un piano di investimento da $50 al mese nello stesso periodo. Si assume un ribilanciamento mensile. SPY è usato come proxy di SPYM. Dividendi reinvestiti. Si tratta di risultati storici, non di una previsione.",
+        to: "a",
+        historyChartAlt: "Grafico storico di un piano di investimento da $50 al mese",
+        downMonth: "saldo in calo",
+        upMonth: "saldo in aumento",
+
+        start: 'Inizia',
+        continue: 'Continua',
+        finish: 'Fine',
+        welcomeTitle: 'Inizia a investire con un solo portafoglio semplice.',
+        welcomeSub: 'Costruisci ricchezza nel lungo periodo in modo automatico con un portafoglio diversificato.',
+        automated: 'Investimento\nautomatico',
+        global: 'Interfaccia\ntradotta',
+        beginner: 'Adatto ai\nprincipianti',
+        amountTitle: 'Costruisci ricchezza con semplicità',
+        amountSub: 'Scegli quanto vuoi investire ogni mese. Puoi cambiarlo in qualsiasi momento.',
+        howTitle: 'Come funziona',
+        howSub: 'Investire può essere semplice. Tu fai le basi, noi facciamo il resto.',
+        step1t: 'Aggiungi denaro ogni mese',
+        step1b: 'Scegli un importo come $50 e lo preleveremo dal tuo conto bancario.',
+        step2t: 'Lo investiamo automaticamente',
+        step2b: 'Il tuo denaro viene investito in un portafoglio diversificato in base alla composizione scelta.',
+        step3t: 'Leggilo nella tua lingua',
+        step3b: 'Usa il menu della lingua per tradurre l esperienza dell app e renderla più chiara.',
+        portTitle: 'Il tuo portafoglio',
+        portSub: 'Un portafoglio semplice e diversificato pensato per il lungo periodo.',
+        usStocks: 'Azioni USA',
+        intlStocks: 'Azioni internazionali',
+        treasuries: 'Buoni del Tesoro',
+        portNoteT: 'Un approccio bilanciato',
+        portNoteB: 'Un mix di azioni USA, azioni internazionali e buoni del Tesoro può sostenere crescita, diversificazione e stabilità.',
+        longTitle: 'Pensa in anni, non in settimane',
+        longSub: 'Nel breve periodo i rendimenti possono salire e scendere. L obiettivo è una crescita costante nel lungo periodo.',
+        tab1: '1 anno',
+        tab5: '5 anni',
+        tab10: '10 anni',
+        longShort: 'In un periodo breve, il portafoglio può avere mesi negativi. È normale. Un mese negativo non significa che la strategia non funzioni.',
+        longMid: 'Nel corso di più anni, il percorso resta irregolare, ma la tendenza può diventare più chiara mentre continui a investire.',
+        longLong: 'Su un orizzonte lungo, investire regolarmente ha storicamente avuto più possibilità di crescere nonostante la volatilità. I rendimenti non sono garantiti.',
+        riskTitle: 'Creato per investire nel lungo periodo',
+        riskSub: 'Questo portafoglio è pensato per un progresso costante nel tempo, non per guadagni rapidi.',
+        risk1t: 'Crescita nel lungo periodo',
+        risk1b: 'Un mix diversificato di azioni USA e internazionali offre potenziale di crescita nel tempo.',
+        risk2t: 'Minore volatilità con i Treasury',
+        risk2b: 'I buoni del Tesoro possono aiutare a ridurre la volatilità e ad aggiungere stabilità.',
+        risk3t: 'Non per bisogni di cassa a breve termine',
+        risk3b: 'Investire comporta rischio e il saldo può salire o scendere. Questa strategia è più adatta a obiettivi di lungo periodo.',
+        doneTitle: 'Tutto pronto',
+        doneSub: 'Il tuo piano di investimento automatico è pronto.',
+        summary1t: '$50 al mese',
+        summary1b: 'Contributo automatico',
+        summary2t: 'Portafoglio Simple Investing',
+        summary2b: '56% SPYM / 14% VXUS / 30% SGOV',
+        summary3t: 'L investimento automatico parte il prossimo mese',
+        summary3b: 'Preleveremo il denaro dal tuo conto bancario collegato.',
+        screenLabel: ['Benvenuto', 'Obiettivo', 'Come funziona', 'Portafoglio', 'Lungo periodo', 'Conferma']
+      },
+      fr: {
+        loadingStages: ['Préparation des placements','Configuration des versements mensuels','Votre portefeuille est prêt'],
+        loadingTitle: "Création du portefeuille",
+        demoTitle: "Compte exemple",
+        accountGrowth: "Gain du placement",
+        contributed: "Versements",
+        investmentsTitle: "Vos placements",
+        holdingsInfo: "Touchez pour voir",
+        demoNote: "Compte exemple basé sur des rendements historiques. Ce n'est pas un compte réel ni une prévision.",
+        accountNavHome: "Accueil",
+        accountNavPortfolio: "Portefeuille",
+        accountNavLearn: "Découvrir",
+        accountNavYou: "Vous",
+        placeholderTitle: "Prochainement",
+        placeholderCopy: "Nous concevrons cet écran ensuite.",
+
+        langName: 'Français',
+        donutMix: 'Le portefeuille',
+        donutHint: 'Touchez une part pour voir ce qu’elle contient',
+        spymDetail: 'Investit dans environ 500 des plus grandes entreprises américaines, dont beaucoup vous sont familières. C’est notre principale source de croissance potentielle à long terme, mais les cours des actions peuvent monter ou baisser.',
+        vxusDetail: 'Investit dans des milliers d’entreprises hors des États-Unis, en Europe, en Asie et sur les marchés émergents. Cela évite de dépendre uniquement des actions américaines, même si les marchés étrangers peuvent aussi baisser.',
+        sgovDetail: 'Investit dans des titres de dette à très court terme du gouvernement américain, appelés bons du Trésor. Ils fluctuent généralement beaucoup moins que les actions et contribuent à stabiliser le portefeuille, mais des pertes restent possibles.',
+        monthlyResult: "Avec 50 $ par mois",
+        thousandExample: "Ce qu investir 50 $ chaque mois aurait donné",
+
+        perMonth: "mois",
+        tab6: "6 mois",
+        tab10m: "10 mois",
+        stocks: "Actions",
+        intlLabel: "Entreprises mondiales",
+        shortBills: "Dette publique à court terme",
+        portfolioValue: "Valeur du compte",
+        growth: "Gain de placement",
+        deposits: "Versements",
+        invested: "Vos versements",
+        underlyingReturn: "Rendement du portefeuille",
+        historicalNotice: "Ce graphique montre comment investir 50 $ chaque mois dans le portefeuille aurait évolué de",
+        historicalMethod: "La courbe suit la valeur d un plan d investissement de 50 $ par mois sur la même période. Rééquilibrage mensuel supposé. SPY est utilisé comme proxy de SPYM. Les distributions sont réinvesties. Il s agit de performances historiques et non d une prévision.",
+        to: "à",
+        historyChartAlt: "Graphique historique de la valeur du compte et des versements",
+        downMonth: "rendement mensuel négatif",
+        upMonth: "rendement mensuel positif",
+
+        start: 'Commencer',
+        continue: 'Continuer',
+        finish: 'Terminer',
+        welcomeTitle: 'Commencez à investir avec un seul portefeuille simple.',
+        welcomeSub: 'Construisez votre patrimoine à long terme automatiquement avec un portefeuille diversifié.',
+        automated: 'Investissement\nautomatique',
+        global: 'Interface\ntraduite',
+        beginner: 'Adapté aux\ndébutants',
+        amountTitle: 'Construire son patrimoine simplement',
+        amountSub: 'Choisissez combien vous souhaitez investir chaque mois. Vous pourrez le modifier plus tard.',
+        howTitle: 'Comment ça marche',
+        howSub: 'Investir peut être simple. Vous faites le plus simple, nous gérons le reste.',
+        step1t: 'Ajoutez de l argent chaque mois',
+        step1b: 'Choisissez un montant comme 50 $ et nous le prélèverons sur votre compte bancaire.',
+        step2t: 'Nous l investissons automatiquement',
+        step2b: 'Votre argent est investi dans un portefeuille diversifié selon la répartition cible.',
+        step3t: 'Lisez dans votre langue',
+        step3b: 'Utilisez le menu de langue pour traduire l expérience de l application et mieux la comprendre.',
+        portTitle: 'Votre portefeuille',
+        portSub: 'Un portefeuille simple et diversifié conçu pour le long terme.',
+        usStocks: 'Actions américaines',
+        intlStocks: 'Actions internationales',
+        treasuries: 'Bons du Trésor',
+        portNoteT: 'Une approche équilibrée',
+        portNoteB: 'Un mélange d actions américaines, d actions internationales et de bons du Trésor peut soutenir la croissance, la diversification et la stabilité.',
+        longTitle: 'Pensez en années, pas en semaines',
+        longSub: 'Les rendements à court terme peuvent monter et descendre. L objectif est une progression durable à long terme.',
+        tab1: '1 an',
+        tab5: '5 ans',
+        tab10: '10 ans',
+        longShort: 'Sur une période courte, le portefeuille peut avoir des mois négatifs. C est normal. Un mauvais mois ne veut pas dire que la stratégie ne fonctionne pas.',
+        longMid: 'Sur plusieurs années, le parcours reste irrégulier, mais la tendance peut devenir plus claire à mesure que les contributions continuent.',
+        longLong: 'Sur un horizon long, investir régulièrement a historiquement eu plus de chances de croître malgré la volatilité. Les rendements ne sont jamais garantis.',
+        riskTitle: 'Conçu pour l investissement à long terme',
+        riskSub: 'Ce portefeuille est conçu pour progresser dans le temps, pas pour des gains rapides.',
+        risk1t: 'Croissance à long terme',
+        risk1b: 'Un mélange diversifié d actions américaines et internationales offre un potentiel de croissance dans le temps.',
+        risk2t: 'Moins de volatilité avec les bons du Trésor',
+        risk2b: 'Les bons du Trésor peuvent aider à réduire la volatilité et à ajouter de la stabilité.',
+        risk3t: 'Pas pour les besoins de liquidité à court terme',
+        risk3b: 'Investir comporte des risques et votre solde peut monter ou descendre. Cette stratégie convient mieux aux objectifs de long terme.',
+        doneTitle: 'C est prêt',
+        doneSub: 'Votre plan d investissement automatique est prêt.',
+        summary1t: '50 $ par mois',
+        summary1b: 'Contribution automatique',
+        summary2t: 'Portefeuille Simple Investing',
+        summary2b: '56% SPYM / 14% VXUS / 30% SGOV',
+        summary3t: 'L investissement automatique commence le mois prochain',
+        summary3b: 'Nous prélèverons depuis votre compte bancaire lié.',
+        screenLabel: ['Accueil', 'Objectif', 'Fonctionnement', 'Portefeuille', 'Long terme', 'Confirmation']
+      }
+    };
+
+    const screens = ['welcome', 'amount', 'how', 'portfolio', 'longterm', 'done', 'creating', 'home'];
+    let screenIndex = 0;
+    let currentLang = 'en';
+    let selectedAmount = 50;
+    let chartView = '5y';
+    let homeRange = 'all';
+    let homeTab = 'home';
+    let homeSelectedAsset = null;
+    let loadingTick = null;
+    let loadingToken = 0;
+
+    let selectedPortfolioAsset = 'SPYM';
+
+    const contentEl = document.getElementById('content');
+    const bottomBar = document.getElementById('bottomBar');
+    const progressEl = document.getElementById('progress');
+    const backBtn = document.getElementById('backBtn');
+    const langBtn = document.getElementById('langBtn');
+    const langLabel = document.getElementById('langLabel');
+    const langMenu = document.getElementById('langMenu');
+
+    // Historical monthly total-return observations for the selected portfolio.
+    // 2021 through 2025 uses 56% SPY (proxy for SPYM) + 14% VXUS + 30% SGOV.
+    // 2017 through 2020 extends the series with the same stock mix and SCHO as the closest
+    // short Treasury proxy before SGOV history is available. 2016 uses annual ETF proxy returns
+    // converted to monthly equivalents so the 10-year view reaches January 2016.
+    const historicalMonthlyReturns = [{"date":"2016-01","return":0.00640401},{"date":"2016-02","return":0.00640401},{"date":"2016-03","return":0.00640401},{"date":"2016-04","return":0.00640401},{"date":"2016-05","return":0.00640401},{"date":"2016-06","return":0.00640401},{"date":"2016-07","return":0.00640401},{"date":"2016-08","return":0.00640401},{"date":"2016-09","return":0.00640401},{"date":"2016-10","return":0.00640401},{"date":"2016-11","return":0.00640401},{"date":"2016-12","return":0.00640401},{"date":"2017-01","return":0.016126},{"date":"2017-02","return":0.024064},{"date":"2017-03","return":0.005052},{"date":"2017-04","return":0.008774},{"date":"2017-05","return":0.0124},{"date":"2017-06","return":0.004256},{"date":"2017-07","return":0.01693},{"date":"2017-08","return":0.002964},{"date":"2017-09","return":0.013348},{"date":"2017-10","return":0.015624},{"date":"2017-11","return":0.017538},{"date":"2017-12","return":0.009614},{"date":"2018-01","return":0.038636},{"date":"2018-02","return":-0.02766},{"date":"2018-03","return":-0.01553},{"date":"2018-04","return":0.003076},{"date":"2018-05","return":0.012376},{"date":"2018-06","return":0.000256},{"date":"2018-07","return":0.02423},{"date":"2018-08","return":0.015448},{"date":"2018-09","return":0.003234},{"date":"2018-10","return":-0.050306},{"date":"2018-11","return":0.013968},{"date":"2018-12","return":-0.05416},{"date":"2019-01","return":0.05624},{"date":"2019-02","return":0.020666},{"date":"2019-03","return":0.013134},{"date":"2019-04","return":0.02722},{"date":"2019-05","return":-0.041036},{"date":"2019-06","return":0.048524},{"date":"2019-07","return":0.00546},{"date":"2019-08","return":-0.010076},{"date":"2019-09","return":0.014278},{"date":"2019-10","return":0.018228},{"date":"2019-11","return":0.021508},{"date":"2019-12","return":0.022928},{"date":"2020-01","return":-0.0032},{"date":"2020-02","return":-0.050982},{"date":"2020-03","return":-0.08861},{"date":"2020-04","return":0.082074},{"date":"2020-05","return":0.033866},{"date":"2020-06","return":0.01595},{"date":"2020-07","return":0.039094},{"date":"2020-08","return":0.0452},{"date":"2020-09","return":-0.023582},{"date":"2020-10","return":-0.017164},{"date":"2020-11","return":0.078656},{"date":"2020-12","return":0.0291},{"date":"2021-01","return":-0.005346},{"date":"2021-02","return":0.018802},{"date":"2021-03","return":0.028042},{"date":"2021-04","return":0.03353197},{"date":"2021-05","return":0.007994},{"date":"2021-06","return":0.012124},{"date":"2021-07","return":0.012082},{"date":"2021-08","return":0.01876197},{"date":"2021-09","return":-0.030926},{"date":"2021-10","return":0.04333},{"date":"2021-11","return":-0.010444},{"date":"2021-12","return":0.03098397},{"date":"2022-01","return":-0.033474},{"date":"2022-02","return":-0.02048003},{"date":"2022-03","return":0.02074},{"date":"2022-04","return":-0.058164},{"date":"2022-05","return":0.003536},{"date":"2022-06","return":-0.057104},{"date":"2022-07","return":0.056822},{"date":"2022-08","return":-0.02846},{"date":"2022-09","return":-0.064898},{"date":"2022-10","return":0.050858},{"date":"2022-11","return":0.050322},{"date":"2022-12","return":-0.034126},{"date":"2023-01","return":0.04835},{"date":"2023-02","return":-0.018954},{"date":"2023-03","return":0.026028},{"date":"2023-04","return":0.012612},{"date":"2023-05","return":-0.001064},{"date":"2023-06","return":0.043942},{"date":"2023-07","return":0.024944},{"date":"2023-08","return":-0.013748},{"date":"2023-09","return":-0.03},{"date":"2023-10","return":-0.01552},{"date":"2023-11","return":0.064014},{"date":"2023-12","return":0.033982},{"date":"2024-01","return":0.00783},{"date":"2024-02","return":0.034656},{"date":"2024-03","return":0.024094},{"date":"2024-04","return":-0.024526},{"date":"2024-05","return":0.035404},{"date":"2024-06","return":0.019832},{"date":"2024-07","return":0.011824},{"date":"2024-08","return":0.017874},{"date":"2024-09","return":0.01666},{"date":"2024-10","return":-0.009998},{"date":"2024-11","return":0.034238},{"date":"2024-12","return":-0.016374},{"date":"2025-01","return":0.020876},{"date":"2025-02","return":-0.003532},{"date":"2025-03","return":-0.02964},{"date":"2025-04","return":0.00017},{"date":"2025-05","return":0.042996},{"date":"2025-06","return":0.035318},{"date":"2025-07","return":0.012744},{"date":"2025-08","return":0.018542},{"date":"2025-09","return":0.025712},{"date":"2025-10","return":0.016664},{"date":"2025-11","return":0.002508},{"date":"2025-12","return":0.004982}];
+    const chartWindows = {'6m': 6, '1y': 12, '5y': 60, '10y': 120};
+    // Example account funded $50 at the start of each of 13 months, Sep 2025 to Sep 2026.
+    // Historical ETF monthly total returns, sourced from assetsanalyzer.com.
+    // No invented 2026 returns, no assumed future appreciation.
+    const accountHistory = [{"date":"2025-09","SPYM":0.0353,"VXUS":0.0344,"SGOV":0.0032},{"date":"2025-10","SPYM":0.0242,"VXUS":0.0159,"SGOV":0.0037},{"date":"2025-11","SPYM":0.0019,"VXUS":0.0040999999999999995,"SGOV":0.0029},{"date":"2025-12","SPYM":0.0008,"VXUS":0.025099999999999997,"SGOV":0.0034000000000000002},{"date":"2026-01","SPYM":0.0147,"VXUS":0.0559,"SGOV":0.0029},{"date":"2026-02","SPYM":-0.0079,"VXUS":0.0521,"SGOV":0.0028000000000000004},{"date":"2026-03","SPYM":-0.0499,"VXUS":-0.079,"SGOV":0.0029},{"date":"2026-04","SPYM":0.1048,"VXUS":0.07719999999999999,"SGOV":0.003},{"date":"2026-05","SPYM":0.053099999999999994,"VXUS":0.0361,"SGOV":0.0029},{"date":"2026-06","SPYM":-0.0104,"VXUS":-0.0022,"SGOV":0.003},{"date":"2026-07","SPYM":0.0002,"VXUS":-0.0105,"SGOV":0.0034000000000000002},{"date":"2026-08","SPYM":0.0271,"VXUS":0.0323,"SGOV":0.0028000000000000004},{"date":"2026-09","SPYM":-0.0031,"VXUS":-0.0252,"SGOV":0.0029}];
+
+
+    function t(key) {
+      return translations[currentLang][key] ?? translations.en[key] ?? key;
+    }
+
+    function renderProgress() {
+      const currentScreen = screens[screenIndex];
+      progressEl.innerHTML = '';
+      if (currentScreen === 'home' || currentScreen === 'creating') {
+        progressEl.style.display = 'none';
+        backBtn.style.visibility = 'hidden';
+        langLabel.textContent = translations[currentLang].langName;
+        return;
+      }
+      progressEl.style.display = 'flex';
+      screens.slice(0, 6).forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === screenIndex ? ' active' : '');
+        progressEl.appendChild(dot);
+      });
+      backBtn.style.visibility = screenIndex === 0 ? 'hidden' : 'visible';
+      langLabel.textContent = translations[currentLang].langName;
+    }
+
+    function renderLanguageMenu() {
+      const order = ['en', 'es', 'it', 'fr'];
+      langMenu.innerHTML = order.map(code => `
+        <button class="lang-item" onclick="setLanguage('${code}')">${translations[code].langName}</button>
+      `).join('');
+    }
+
+    function amountOptions() {
+      return [10, 25, 50, 100].map(amount => `
+        <button type="button" class="option ${selectedAmount === amount ? 'selected' : ''}" onclick="selectAmount(${amount})" aria-pressed="${selectedAmount === amount}">
+          <strong>$${amount} / ${t('perMonth')}</strong>
+          <span class="radio" aria-hidden="true"></span>
+        </button>
+      `).join('');
+    }
+
+    function renderMiniHeroGraph() {
+      return `
+        <div class="mini-graph">
+          <svg viewBox="0 0 320 180" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="fillHero" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#80cfff" stop-opacity="0.55" />
+                <stop offset="100%" stop-color="#80cfff" stop-opacity="0.08" />
+              </linearGradient>
+            </defs>
+            <path d="M0,145 C40,120 50,118 76,130 C105,144 120,118 152,102 C190,84 208,100 238,78 C270,54 290,72 320,44 L320,180 L0,180 Z" fill="url(#fillHero)"/>
+            <path d="M0,145 C40,120 50,118 76,130 C105,144 120,118 152,102 C190,84 208,100 238,78 C270,54 290,72 320,44" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="76" cy="130" r="5.5" fill="#49cf86" stroke="#fff" stroke-width="3" />
+            <circle cx="152" cy="102" r="5.5" fill="#49cf86" stroke="#fff" stroke-width="3" />
+            <circle cx="238" cy="78" r="5.5" fill="#49cf86" stroke="#fff" stroke-width="3" />
+            <circle cx="320" cy="44" r="5.5" fill="#49cf86" stroke="#fff" stroke-width="3" />
+            <circle cx="40" cy="40" r="18" fill="#ffe49b" fill-opacity="0.9" />
+          </svg>
+        </div>
+      `;
+    }
+
+    function money(n) {
+      return new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0}).format(n);
+    }
+    function dateLabel(ym) {
+      const [y, m] = ym.split('-').map(Number);
+      return new Intl.DateTimeFormat(currentLang === 'en' ? 'en-US' : currentLang, {month:'short', year:'numeric'}).format(new Date(Date.UTC(y,m-1,1)));
+    }
+    function historicalPath() {
+      const n = chartWindows[chartView];
+      const monthly = historicalMonthlyReturns.slice(-n);
+      let balance = 0;
+      return [{date: 'start', balance: 0, deposits:0, return:0}].concat(monthly.map((m,i) => {
+        balance = (balance + selectedAmount) * (1 + m.return);
+        return {date:m.date, balance, deposits:(i+1)*selectedAmount, return:m.return};
+      }));
+    }
+    function plotPolyline(data, key, min, max, width, height, left, top) {
+      const innerW = width-left-8, innerH = height-top-25;
+      return data.map((d,i)=>{
+        const x = left+(i/(data.length-1))*innerW;
+        const y = top + (1-(d[key]-min)/(max-min))*innerH;
+        return [x,y];
+      });
+    }
+    function svgPoints(arr) { return arr.map(p=>p.map(x=>x.toFixed(2)).join(',')).join(' '); }
+    function renderChart() {
+      const data = historicalPath();
+      const last = data[data.length-1];
+      const totalReturn = historicalMonthlyReturns.slice(-chartWindows[chartView])
+        .reduce((acc,r)=>acc*(1+r.return),1)-1;
+      const growth = last.balance-last.deposits;
+      const series = data.slice(1).map((d,i)=>{
+        const prev = i === 0 ? 0 : data[i].balance;
+        return {date:d.date, value:d.balance, negative:d.balance < prev, monthlyReturn:d.return};
+      });
+      const width=326, height=205, left=41, top=11;
+      const vmin = Math.min(...series.map(d=>d.value));
+      const vmax = Math.max(...series.map(d=>d.value));
+      const range=Math.max(vmax-vmin,50);
+      const min=Math.max(0,Math.floor((vmin-range*.12)/100)*100);
+      const max=Math.ceil((vmax+range*.12)/100)*100;
+      const coords=plotPolyline(series,'value',min,max,width,height,left,top);
+      const gridY=[0,.5,1].map(fr=>{
+        const y=top+fr*(height-top-25);
+        const val=max*(1-fr)+min*fr;
+        return `<line x1="${left}" x2="${width-8}" y1="${y}" y2="${y}" stroke="#e6edf4" stroke-width="1" />
+          <text x="${left-4}" y="${y+4}" text-anchor="end" fill="#8c9bab" font-size="10">${money(val)}</text>`;
+      }).join('');
+      const firstDate=series[0].date;
+      const dates=`<text x="${left}" y="${height-2}" fill="#7c8b9d" font-size="10">${dateLabel(firstDate)}</text>
+        <text x="${width-8}" y="${height-2}" text-anchor="end" fill="#7c8b9d" font-size="10">${dateLabel(last.date)}</text>`;
+      const lineSegments = coords.slice(1).map((point,i)=>{
+        const prev=coords[i], isDown=series[i+1].negative;
+        return `<line x1="${prev[0]}" y1="${prev[1]}" x2="${point[0]}" y2="${point[1]}" stroke="${isDown?'#e56c66':'#2e6ef7'}" stroke-width="3.5" stroke-linecap="round" />`;
+      }).join('');
+      const returnText=(totalReturn>=0?'+':'')+(totalReturn*100).toFixed(1)+'%';
+      const gainText=(growth>=0?'+':'')+money(growth);
+      return `
+        <div class="toggle-row historical-toggles">
+          ${[['6m','tab6'],['1y','tab1'],['5y','tab5'],['10y','tab10']].map(([v,label])=>`<button class="toggle ${chartView===v?'active':''}" onclick="setChart('${v}')" aria-pressed="${chartView===v}">${t(label)}</button>`).join('')}
+        </div>
+        <div class="history-summary">
+          <div><small>${t('underlyingReturn')}</small><strong class="${totalReturn>=0?'positive':'negative'}">${returnText}</strong></div>
+          <div><small>${t('monthlyResult').replace('$50','$'+selectedAmount).replace('50 $',selectedAmount+' $')}</small><strong>${money(last.balance)}</strong></div>
+        </div>
+        <div class="chart historical-chart">
+          <div class="chart-mini-title">${t('thousandExample')}</div>
+          <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${t('historyChartAlt')}" preserveAspectRatio="none">
+            ${gridY}
+            ${lineSegments}
+            ${dates}
+            ${coords.map((point,idx)=>`<circle cx="${point[0]}" cy="${point[1]}" r="5.5" fill="transparent"><title>${dateLabel(series[idx].date)}: ${money(series[idx].value)} (${series[idx].monthlyReturn<0?'':'+'}${(series[idx].monthlyReturn*100).toFixed(1)}%)</title></circle>`).join('')}
+          </svg>
+          <div class="history-legend"><span><i class="linekey blue"></i>${t('upMonth')}</span><span><i class="linekey red"></i>${t('downMonth')}</span></div>
+        </div>
+        <div class="history-details"><strong>${t('invested')}: ${money(last.deposits)}</strong><span>${t('growth')}: ${gainText}</span></div>
+        <p class="historical-disclosure">${t('historicalNotice')} ${dateLabel(firstDate)} ${t('to')} ${dateLabel(last.date)}. ${t('historicalMethod').replace('$50', '$'+selectedAmount).replace('50 $', selectedAmount+' $')} ${chartView === '10y' ? ' For earlier Treasury months, the closest short-duration Treasury proxy available is used before SGOV history begins.' : ''}</p>
+      `;
+    }
+
+    const portfolioAssets = [
+      { ticker:'SPYM', pct:56, color:'#2e6ef7', nameKey:'usStocks', detailKey:'spymDetail', labelX:274, labelY:143, pointerX:274, pointerY:167 },
+      { ticker:'VXUS', pct:14, color:'#55b6ff', nameKey:'intlStocks', detailKey:'vxusDetail', labelX:4, labelY:220, pointerX:74, pointerY:243 },
+      { ticker:'SGOV', pct:30, color:'#1fc876', nameKey:'treasuries', detailKey:'sgovDetail', labelX:4, labelY:26, pointerX:74, pointerY:49 }
+    ];
+    // SVG angles start at 12 o'clock and proceed clockwise to match the original donut.
+    function donutPoint(cx,cy,r,deg) {
+      const a=deg*Math.PI/180;
+      return {x:cx+r*Math.cos(a), y:cy+r*Math.sin(a)};
+    }
+    function arcPath(cx,cy,outer,inner,start,end) {
+      const a=donutPoint(cx,cy,outer,start), b=donutPoint(cx,cy,outer,end);
+      const c=donutPoint(cx,cy,inner,end), d=donutPoint(cx,cy,inner,start);
+      const large=(end-start)>180?1:0;
+      return `M${a.x.toFixed(2)},${a.y.toFixed(2)} A${outer},${outer} 0 ${large} 1 ${b.x.toFixed(2)},${b.y.toFixed(2)} L${c.x.toFixed(2)},${c.y.toFixed(2)} A${inner},${inner} 0 ${large} 0 ${d.x.toFixed(2)},${d.y.toFixed(2)} Z`;
+    }
+    function renderPortfolioDiagram() {
+      const cx=169,cy=141,rOuter=94,rInner=57;
+      let a=-90;
+      const arcs=portfolioAssets.map(asset=>{
+        const start=a,end=a+asset.pct*3.6,mid=(start+end)/2;
+        a=end;
+        const pt=donutPoint(cx,cy,rOuter+2,mid);
+        const dir=donutPoint(0,0,4,mid);
+        const selected=selectedPortfolioAsset===asset.ticker;
+        return {...asset,mid,px:pt.x,py:pt.y,selected,
+          path:arcPath(cx,cy,rOuter,rInner,start+1,end-1),
+          translate:`translate(${selected?dir.x.toFixed(2):0},${selected?dir.y.toFixed(2):0})`};
+      });
+      const sectors=arcs.map(asset=>`
+        <g class="donut-segment ${asset.selected?'selected':''}" data-holding="${asset.ticker}" role="button" tabindex="0"
+          aria-label="${asset.pct}% ${t(asset.nameKey)}. ${asset.ticker}"
+          onclick="choosePortfolioAsset('${asset.ticker}')" onkeydown="portfolioKeySelect(event,'${asset.ticker}')"
+          transform="${asset.translate}">
+          <path class="donut-arc" fill="${asset.color}" d="${asset.path}" stroke="#f8fbfd" stroke-width="1.5" />
+        </g>`).join('');
+      const callouts=arcs.map(asset=>{
+        const elbow=asset.labelX>170?asset.pointerX-8:asset.pointerX+8;
+        return `<g class="donut-label ${asset.selected?'selected':''}" data-holding="${asset.ticker}" role="button" tabindex="0"
+          aria-label="Show ${asset.ticker} details" onclick="choosePortfolioAsset('${asset.ticker}')" onkeydown="portfolioKeySelect(event,'${asset.ticker}')">
+          <polyline class="pointer" stroke="${asset.color}" points="${asset.px.toFixed(1)},${asset.py.toFixed(1)} ${elbow},${asset.pointerY} ${asset.pointerX},${asset.pointerY}"/>
+          <circle cx="${asset.px.toFixed(1)}" cy="${asset.py.toFixed(1)}" r="3.2" fill="${asset.color}" />
+          <rect class="callout-box" x="${asset.labelX}" y="${asset.labelY}" width="66" height="47" rx="12" />
+          <text class="callout-value" x="${asset.labelX+10}" y="${asset.labelY+22}">${asset.pct}%</text>
+          <text class="callout-name" x="${asset.labelX+10}" y="${asset.labelY+37}">${asset.ticker}</text>
+        </g>`;
+      }).join('');
+      return `<div class="portfolio-diagram"><svg viewBox="0 0 344 285" role="group" aria-label="Interactive portfolio allocation chart: 56% SPYM, 14% VXUS and 30% SGOV">
+        ${sectors}
+        <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="13" fill="#5f718c" font-weight="700">${t('donutMix')}</text>
+        ${callouts}
+      </svg></div>`;
+    }
+    function renderPortfolioDetail() {
+      const a=portfolioAssets.find(asset=>asset.ticker===selectedPortfolioAsset)||portfolioAssets[0];
+      return `<div class="allocation-detail-header"><span class="allocation-detail-dot" style="background:${a.color}"></span>
+        <strong>${t(a.nameKey)}</strong><span class="allocation-detail-ticker">${a.ticker}</span></div>
+        <p>${t(a.detailKey)}</p>`;
+    }
+    function choosePortfolioAsset(ticker) {
+      selectedPortfolioAsset=ticker;
+      // Re-render just the diagram and the single detail card. Navigation and scroll stay put.
+      const diagram=document.getElementById('portfolioDiagram');
+      const details=document.getElementById('portfolioDetail');
+      if(diagram)diagram.innerHTML=renderPortfolioDiagram();
+      if(details)details.innerHTML=renderPortfolioDetail();
+    }
+    function portfolioKeySelect(e,ticker) {
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();choosePortfolioAsset(ticker);}
+    }
+
+    // Account created April 13, 2026, with the first recurring $50 contribution
+    // on May 1, 2026. No fake future price movements are generated.
+    const SIM_FIRST_DEPOSIT = '2026-05-01';
+    const ASSET_WEIGHTS = {SPYM:.56,VXUS:.14,SGOV:.30};
+    let liveMarket = null;
+    let marketLoadError = '';
+    let marketLoadBusy = false;
+    let marketFeedUrl = (new URLSearchParams(location.search).get('marketFeed') ||
+      (()=>{try{return localStorage.getItem('simple_investing_market_feed_url')||'';}catch{return '';}})()).trim();
+    // The server endpoint must supply dividend-reinvested total-return indexes.
+    // Example payload: {asOf:"2026-10-13T16:00:00-04:00",source:"Provider name",
+    // daily:[{date:"2026-04-30",SPYM:100,VXUS:100,SGOV:100},...],
+    // intraday:[{time:"2026-10-13T09:35:00-04:00",SPYM:112,VXUS:105,SGOV:101},...]}
+    // The endpoint, not this public HTML, should hold the market provider API key.
+    function accountPath() {
+      if(liveMarket && liveMarket.daily && liveMarket.daily.length){
+        const daily=[...liveMarket.daily];
+        const final=liveMarket.intraday?.at(-1);
+        if(final && final.time && ['SPYM','VXUS','SGOV'].every(t=>Number(final[t])>0)){
+          const quoteDate=final.time.slice(0,10);
+          const lastDay=daily.at(-1)?.date;
+          if(quoteDate>=lastDay){
+            if(quoteDate===lastDay)daily.pop();
+            daily.push({date:quoteDate,SPYM:final.SPYM,VXUS:final.VXUS,SGOV:final.SGOV});
+          }
+        }
+        return liveAccountPath(daily,liveMarket.asOf);
+      }
+      // Unconnected demo is deliberately frozen at the last historical observation.
+      // It must not claim these are October 2026 market values.
+      const rows=accountHistory.filter(r=>r.date>='2026-05'&&r.date<='2026-09');
+      const history=[{date:'2026-04-30',balance:0,deposits:0,growth:0,units:null}];
+      let balance=0;
+      rows.forEach((r,i)=>{
+        const rate=.56*r.SPYM+.14*r.VXUS+.30*r.SGOV;
+        balance=(balance+selectedAmount)*(1+rate);
+        history.push({date:r.date+'-28',balance,rate,deposits:(i+1)*selectedAmount,growth:balance-(i+1)*selectedAmount,units:null});
+      });
+      return history;
+    }
+    function dateInNY(iso) {
+      if(!iso) return new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+      if(/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+      return new Date(iso).toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+    }
+    function firstTradingDayInMonth(date,prevMonth) { return date.substring(0,7)!==prevMonth; }
+    function liveAccountPath(records,asOf) {
+      const clean=records.filter(r=>r && /^\d{4}-\d{2}-\d{2}$/.test(r.date) && ['SPYM','VXUS','SGOV'].every(t=>Number(r[t])>0))
+        .sort((a,b)=>a.date.localeCompare(b.date));
+      const units={SPYM:0,VXUS:0,SGOV:0};
+      let deposits=0, lastMonth='',cash=0;
+      const history=[{date:'2026-04-30',balance:0,deposits:0,growth:0,units:{...units}}];
+      for(const row of clean){
+        if(row.date<SIM_FIRST_DEPOSIT)continue;
+        const month=row.date.substring(0,7);
+        if(firstTradingDayInMonth(row.date,lastMonth)){
+          // One monthly contribution on the first available market day of each month.
+          const [year,mm]=month.split('-').map(Number);
+          if((year-2026)*12+(mm-5)>=0){
+            deposits+=selectedAmount;
+            ['SPYM','VXUS','SGOV'].forEach(t=>units[t]+=selectedAmount*ASSET_WEIGHTS[t]/Number(row[t]));
+          }
+          lastMonth=month;
+        }
+        const balance=cash+Object.keys(units).reduce((a,t)=>a+units[t]*Number(row[t]),0);
+        history.push({date:row.date,balance,deposits,growth:balance-deposits,units:{...units},indexes:row});
+      }
+      if(history.length===1)return history;
+      // On a weekend or holiday at the start of a month, record a scheduled
+      // contribution as cash until the next trading day's purchase.
+      const today=dateInNY(asOf),endMonth=today.slice(0,7),last=history[history.length-1];
+      if(endMonth>last.date.slice(0,7)){
+        const [ly,lm]=last.date.slice(0,7).split('-').map(Number);
+        const [ey,em]=endMonth.split('-').map(Number);
+        const months=(ey-ly)*12+em-lm;
+        if(months>0 && months<=2){
+          cash=months*selectedAmount;
+          history.push({date:today,balance:last.balance+cash,deposits:last.deposits+cash,growth:last.growth,units:{...units},indexes:last.indexes,pendingCash:cash});
+        }
+      }
+      return history;
+    }
+    function liveIntradayPath(history){
+      if(!liveMarket?.intraday?.length || history.length<2)return [];
+      const prior=history[history.length-1], units=prior.units;
+      if(!units)return [];
+      return liveMarket.intraday.filter(r=>r.time && ['SPYM','VXUS','SGOV'].every(t=>Number(r[t])>0))
+        .map(r=>({date:r.time,balance:(prior.pendingCash||0)+Object.keys(units).reduce((a,t)=>a+units[t]*r[t],0),
+          deposits:prior.deposits,growth:0,units})).sort((a,b)=>a.date.localeCompare(b.date));
+    }
+    function accountWindow(history) {
+      if(!liveMarket){
+        // Daily or intraday market changes cannot be inferred from monthly returns.
+        if(['1d','1w'].includes(homeRange))return null;
+        if(homeRange==='1m')return history.slice(-2);
+        if(homeRange==='3m')return history.slice(-4);
+        if(homeRange==='all'||homeRange==='1y'||homeRange==='ytd')return history;
+      }
+      const asOf=dateInNY(liveMarket?.asOf || ''),
+        d=new Date(asOf+'T12:00:00Z');
+      let cutoff=null;
+      if(homeRange==='all') return history;
+      if(homeRange==='ytd') cutoff=asOf.slice(0,4)+'-01-01';
+      else {
+        if(homeRange==='1d')d.setUTCDate(d.getUTCDate()-1);
+        if(homeRange==='1w')d.setUTCDate(d.getUTCDate()-7);
+        if(homeRange==='1m')d.setUTCMonth(d.getUTCMonth()-1);
+        if(homeRange==='3m')d.setUTCMonth(d.getUTCMonth()-3);
+        if(homeRange==='1y')d.setUTCFullYear(d.getUTCFullYear()-1);
+        cutoff=d.toISOString().slice(0,10);
+      }
+      // Intraday is needed for a true 1D view and preferable for 1W.
+      if(homeRange==='1d'){
+        const intraday=liveIntradayPath(history).filter(r=>r.date.slice(0,10)===asOf);
+        return intraday.length>=2 ? intraday : null;
+      }
+      const firstAtOrAfter=history.findIndex(r=>r.date>=cutoff);
+      const pos=Math.max(0,firstAtOrAfter-1);
+      const base=history.slice(pos);
+      if(homeRange==='1w' && liveMarket?.intraday?.length){
+        const intra=liveIntradayPath(history).filter(r=>r.date.slice(0,10)>=cutoff);
+        return [...base.filter(r=>r.date<intra[0]?.date.slice(0,10)),...intra];
+      }
+      return base.length>=2?base:null;
+    }
+    function fundYtd(ticker){
+      if(liveMarket?.daily?.length){
+        const rows=liveMarket.daily.filter(r=>Number(r[ticker])>0);
+        const year=dateInNY(liveMarket.asOf).slice(0,4);
+        const start=rows.find(r=>r.date>=year+'-01-01');
+        const end=rows.at(-1);
+        return start&&end?end[ticker]/start[ticker]-1:null;
+      }
+      return accountHistory.filter(r=>r.date>='2026-01'&&r.date<='2026-09').reduce((acc,r)=>acc*(1+r[ticker]),1)-1;
+    }
+    function pct(n){return n==null?'—':(n>=0?'+':'')+(n*100).toFixed(1)+'%';}
+    function homeAxisDate(dt){
+      if(!dt)return '';
+      return dateLabel(dt.slice(0,7));
+    }
+    function homeStatusLabel(){
+      if(!liveMarket)return 'Sample through Sep 2026';
+      const last=liveMarket.intraday?.at(-1)?.time || liveMarket.daily?.at(-1)?.date || liveMarket.asOf;
+      const stamp=/^\d{4}-\d{2}-\d{2}$/.test(last)?new Date(last+'T12:00:00Z'):new Date(last);
+      return `${liveMarket.source||'Market data'} · ${stamp.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'America/New_York'})}`;
+    }
+    function renderHomeDashboard(){
+      const history=accountPath(),last=history.at(-1);
+      const shown=accountWindow(history);
+      const width=330,height=206,left=12,top=16,right=7,bottom=15;
+      const demoTitle=liveMarket?'Connected':'Demo only';
+      let chartMarkup='';let periodMarkup='';
+      if(shown&&shown.length>=2){
+        const min=Math.max(0,Math.min(...shown.map(x=>x.balance))*0.93);
+        const max=Math.max(...shown.map(x=>x.balance))*1.09||1;
+        const span=max-min||1;
+        const points=shown.map((p,i)=>({x:left+i*(width-left-right)/(shown.length-1),y:top+(1-(p.balance-min)/span)*(height-top-bottom),...p}));
+        const coords=points.map(p=>p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ');
+        const area=`${points[0].x},${height-bottom} ${coords} ${points.at(-1).x},${height-bottom}`;
+        const grid=[.1,.5,.9].map(f=>{let y=top+f*(height-top-bottom);return `<line x1="${left}" x2="${width-right}" y1="${y}" y2="${y}" stroke="#e3f0e8" stroke-width="1"/>`;}).join('');
+        const dots=points.slice(1).map(p=>`<circle cx="${p.x}" cy="${p.y}" r="6" fill="transparent"><title>${p.date}: ${money(p.balance)} with ${money(p.deposits)} contributed</title></circle>`).join('');
+        chartMarkup=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Simulated ${money(selectedAmount)} monthly investment portfolio value">
+         <defs><linearGradient id="accountFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#baf8d0" stop-opacity=".88"/><stop offset="100%" stop-color="#e8fff0" stop-opacity="0"/></linearGradient></defs>
+         ${grid}<polygon points="${area}" fill="url(#accountFill)"/><polyline points="${coords}" fill="none" stroke="#21c662" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+         <circle cx="${points.at(-1).x}" cy="${points.at(-1).y}" r="4.5" fill="#21c662" stroke="#fff" stroke-width="2"/>${dots}</svg>`;
+        periodMarkup=`<div class="account-period"><span>${homeAxisDate(shown[0].date)}</span><span>${homeAxisDate(shown.at(-1).date)}</span></div>`;
+      } else {
+        const explain=!liveMarket?'Connect a market-data feed to view intraday changes.':'Intraday bars were not included in the connected feed.';
+        chartMarkup=`<div class="account-chart-unavailable"><strong>${homeRange.toUpperCase()} market history unavailable</strong><span>${explain}</span></div>`;
+        periodMarkup=`<div class="account-period"><span>${homeStatusLabel()}</span><span></span></div>`;
+      }
+      const assetTiles=portfolioAssets.map(a=>`<button class="asset-mini" type="button" onclick="showHomeAsset('${a.ticker}')" aria-label="View ${a.ticker} details">
+        <div class="asset-mini-top"><i class="asset-mini-dot" style="background:${a.color}"></i>${a.ticker}</div>
+        <div class="asset-mini-weight">${a.pct}%</div><div class="asset-mini-ytd">${pct(fundYtd(a.ticker))} YTD</div></button>`).join('');
+      const gain=last.balance-last.deposits;
+      return `<div class="account-view">
+        <div class="account-head"><strong>Simple Investing</strong><span class="demo-pill">${demoTitle}</span></div>
+        <div class="account-amount">${money(last.balance)}</div>
+        <div class="account-gain ${gain<0?'negative':''}">${gain>=0?'+':''}${money(gain)} ${t('accountGrowth').toLowerCase()}</div>
+        <div class="account-sub">${homeStatusLabel()} · ${money(selectedAmount)}/${t('perMonth')}</div>
+        <div class="account-range" role="group" aria-label="Portfolio history period">
+          ${[['1d','1D'],['1w','1W'],['1m','1M'],['3m','3M'],['ytd','YTD'],['1y','1Y'],['all','All']].map(([id,label])=>`<button class="${homeRange===id?'active':''}" onclick="setHomeRange('${id}')" aria-pressed="${homeRange===id}">${label}</button>`).join('')}
+        </div>
+        <div class="account-chart">${chartMarkup}</div>${periodMarkup}
+        <div class="account-tiles"><div class="account-tile"><small>${t('contributed')}</small><strong>${money(last.deposits)}</strong></div>
+        <div class="account-tile"><small>${t('accountGrowth')}</small><strong class="${gain>=0?'positive':''}">${gain>=0?'+':''}${money(gain)}</strong></div></div>
+        <div class="account-section"><strong>${t('investmentsTitle')}</strong><span>${t('holdingsInfo')}</span></div>
+        <div class="asset-mini-grid">${assetTiles}</div>
+        <p class="account-market-status">${liveMarket?'Simulated purchases start May 1, 2026. Dividends reinvested.':'No live feed connected. These are historical demo figures, not current market prices.'}
+        <button type="button" onclick="openFeedSettings()">${liveMarket?'Market data settings':'Connect market data'}</button></p>
+      </div>`;
+    }
+    async function refreshMarketFeed(){
+      if(!marketFeedUrl||marketLoadBusy)return;
+      marketLoadBusy=true;marketLoadError='';
+      try{
+        const response=await fetch(marketFeedUrl,{cache:'no-store'});
+        if(!response.ok)throw Error('Market feed returned HTTP '+response.status);
+        const json=await response.json();
+        if(!json.asOf||!Array.isArray(json.daily)||json.daily.length<2 || !['SPYM','VXUS','SGOV'].every(t=>json.daily.some(x=>Number(x[t])>0)))throw Error('Market feed did not include valid portfolio histories');
+        liveMarket=json;
+        if(screens[screenIndex]==='home'&&homeTab==='home')renderScreen();
+      }catch(error){marketLoadError=String(error?.message||error);console.warn('Simple Investing feed:',marketLoadError);}
+      finally{marketLoadBusy=false;}
+    }
+    function openFeedSettings(){
+      document.getElementById('feedSettings')?.remove();
+      const panel=document.createElement('div');panel.id='feedSettings';panel.className='feed-dialog';
+      panel.innerHTML=`<section class="feed-dialog-body" role="dialog" aria-modal="true"><h3>Connect market data</h3>
+      <p>This is a simulated account. Connect a read-only portfolio data endpoint to show actual market prices. Never paste a private provider API key into this public HTML.</p>
+      <label for="feedInput">Serverless market-data endpoint URL</label><input id="feedInput" type="url" placeholder="https://your-project.example/portfolio-feed" value="${marketFeedUrl.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"/>
+      <div class="feed-dialog-actions"><button type="button" class="cancel" onclick="closeFeedSettings()">Cancel</button><button type="button" class="confirm" onclick="saveFeedSettings()">Connect</button></div>
+      ${marketLoadError?`<p style="color:#c0524d">${marketLoadError}</p>`:''}</section>`;
+      document.querySelector('.screen').appendChild(panel);
+      panel.addEventListener('click',e=>{if(e.target===panel)closeFeedSettings()});
+    }
+    function closeFeedSettings(){document.getElementById('feedSettings')?.remove()}
+    function saveFeedSettings(){
+      const value=document.getElementById('feedInput')?.value.trim();
+      if(value && !/^https:\/\//i.test(value)){alert('Please enter an HTTPS endpoint.');return;}
+      marketFeedUrl=value||'';liveMarket=null;marketLoadError='';
+      try { if(marketFeedUrl)localStorage.setItem('simple_investing_market_feed_url',marketFeedUrl);
+            else localStorage.removeItem('simple_investing_market_feed_url'); } catch {}
+      closeFeedSettings();renderScreen();
+      refreshMarketFeed();
+    }
+    function renderHomeNav() {
+      const labels=[['home','⌂','accountNavHome'],['portfolio','◉','accountNavPortfolio'],['learn','◔','accountNavLearn'],['you','⚙','accountNavYou']];
+      return `<nav class="home-nav" aria-label="Account navigation">
+        ${labels.map(([id,ico,key])=>`<button class="home-nav-item ${homeTab===id?'active':''}" type="button" onclick="openHomeTab('${id}')" aria-current="${homeTab===id?'page':'false'}"><span>${ico}</span>${t(key)}</button>`).join('')}
+      </nav>`;
+    }
+    function renderHomeTab() {
+      if(homeTab==='home') return renderHomeDashboard();
+      if(homeTab==='portfolio') return `<div class="account-tab-content"><h2>${t('portTitle')}</h2><p class="subhead">${t('portSub')}</p><div id="portfolioDiagram">${renderPortfolioDiagram()}</div><p class="portfolio-hint">${t('donutHint')}</p><div id="portfolioDetail" class="allocation-detail">${renderPortfolioDetail()}</div></div>`;
+      const k=homeTab==='learn'?'accountNavLearn':'accountNavYou';
+      return `<div class="account-placeholder"><div class="bigicon">◌</div><h2>${t(k)}</h2><p>${t('placeholderTitle')}</p></div>`;
+    }
+    function openHomeTab(id){ homeTab=id; homeSelectedAsset=null; renderScreen(); }
+    function setHomeRange(id){ homeRange=id; renderScreen(); }
+    function showHomeAsset(ticker){
+      homeSelectedAsset=ticker;
+      const a=portfolioAssets.find(x=>x.ticker===ticker);
+      const latest=accountPath().at(-1);
+      const modal=document.createElement('div');
+      modal.className='sheet-overlay'; modal.id='holdingSheet';
+      modal.onclick=(e)=>{if(e.target===modal) closeHomeAsset()};
+      modal.innerHTML=`<section class="sheet-panel" role="dialog" aria-modal="true" aria-label="${ticker} details"><div class="sheet-title-row"><h3><span class="asset-mini-dot" style="background:${a.color};width:12px;height:12px;margin-right:9px"></span>${ticker}</h3><button class="sheet-close" type="button" onclick="closeHomeAsset()" aria-label="Close">×</button></div><strong>${t(a.nameKey)}</strong><p>${t(a.detailKey)}</p><div class="sheet-stat-grid"><div class="sheet-stat"><small>Portfolio share</small><strong>${a.pct}%</strong></div><div class="sheet-stat"><small>Approx. value</small><strong>${money(latest.balance*a.pct/100)}</strong></div></div><div class="sheet-stat-grid"><div class="sheet-stat"><small>Fund YTD return</small><strong>${pct(fundYtd(ticker))}</strong></div><div class="sheet-stat"><small>As of</small><strong>${liveMarket?dateInNY(liveMarket.asOf):'Sep 2026 demo'}</strong></div></div></section>`;
+      document.querySelector('.screen').appendChild(modal);
+    }
+    function closeHomeAsset(){document.getElementById('holdingSheet')?.remove();homeSelectedAsset=null;}
+    function renderCreating(){
+      return `<div class="loading-screen"><div class="loading-orbit"><div class="loading-mark" id="loadingMark">✦</div></div>
+        <h2 class="loading-heading">${t('loadingTitle')}</h2><p id="loadingCopy" class="loading-copy">${t('loadingStages')[0]}</p>
+        <div class="loading-meter"><div id="loadingFill" class="loading-meter-fill" style="width:5%"></div></div>
+        <div class="loading-caveat">Simple Investing · Portfolio preview</div></div>`;
+    }
+    function goCreating(){
+      screenIndex=screens.indexOf('creating');
+      renderScreen();
+      loadingToken++;
+      const token=loadingToken;
+      let start=performance.now();
+      const duration=2300;
+      if(loadingTick)clearInterval(loadingTick);
+      loadingTick=setInterval(()=>{
+        if(token!==loadingToken||screens[screenIndex]!=='creating'){clearInterval(loadingTick);return;}
+        const elapsed=performance.now()-start;
+        const frac=Math.min(elapsed/duration,1);
+        const fill=document.getElementById('loadingFill');
+        if(fill) fill.style.width=(5+95*frac)+'%';
+        const copy=document.getElementById('loadingCopy');
+        if(copy)copy.textContent=t('loadingStages')[Math.min(2,Math.floor(frac*3))];
+        const mark=document.getElementById('loadingMark');
+        if(mark && frac > .85)mark.textContent='✓';
+        if(frac===1){
+          clearInterval(loadingTick);
+          loadingTick=null;
+          homeRange='all';homeTab='home';
+          screenIndex=screens.indexOf('home');renderScreen();
+        }
+      },45);
+    }
+
+    function renderScreen() {
+      contentEl.classList.remove('is-portfolio', 'is-home');
+      document.querySelector('.screen').classList.toggle('account-mode', ['home','creating'].includes(screens[screenIndex]));
+      document.querySelector('.screen').classList.toggle('loading-mode', screens[screenIndex]==='creating');
+      contentEl.classList.toggle('is-home', screens[screenIndex]==='home');
+      const L = translations[currentLang];
+      const label = L.screenLabel;
+      if (screens[screenIndex] === 'welcome') {
+        contentEl.innerHTML = `
+          <div class="hero-card">
+            <div class="logo"><div class="leaf"></div><div>Simple<br>Investing</div></div>
+            <h2>${t('welcomeTitle')}</h2>
+            <p class="subhead">${t('welcomeSub')}</p>
+            ${renderMiniHeroGraph()}
+            <div class="feature-row">
+              <div class="feature-chip"><div class="chip-icon green">📈</div>${t('automated').replace(/\n/g,'<br>')}</div>
+              <div class="feature-chip"><div class="chip-icon blue">🌐</div>${t('global').replace(/\n/g,'<br>')}</div>
+              <div class="feature-chip"><div class="chip-icon teal">🛡️</div>${t('beginner').replace(/\n/g,'<br>')}</div>
+            </div>
+          </div>
+        `;
+        bottomBar.innerHTML = `<button class="btn primary" onclick="nextScreen()">${t('start')} →</button>`;
+      }
+
+      if (screens[screenIndex] === 'amount') {
+        contentEl.innerHTML = `
+          <h2>${t('amountTitle')}</h2>
+          <p class="subhead">${t('amountSub')}</p>
+          ${amountOptions()}
+        `;
+        bottomBar.innerHTML = `<button class="btn primary" onclick="nextScreen()">${t('continue')} →</button>`;
+      }
+
+      if (screens[screenIndex] === 'how') {
+        contentEl.innerHTML = `
+          <h2>${t('howTitle')}</h2>
+          <p class="subhead">${t('howSub')}</p>
+          <div class="timeline">
+            <div class="step">
+              <div class="step-num one">1</div>
+              <div class="step-card"><strong>${t('step1t')}</strong><p>${t('step1b').replace('$50', '$' + selectedAmount)}</p></div>
+            </div>
+            <div class="step">
+              <div class="step-num two">2</div>
+              <div class="step-card"><strong>${t('step2t')}</strong><p>${t('step2b')}</p></div>
+            </div>
+            <div class="step">
+              <div class="step-num three">3</div>
+              <div class="step-card"><strong>${t('step3t')}</strong><p>${t('step3b')}</p></div>
+            </div>
+          </div>
+        `;
+        bottomBar.innerHTML = `<button class="btn primary" onclick="nextScreen()">${t('continue')} →</button>`;
+      }
+
+      if (screens[screenIndex] === 'portfolio') {
+        contentEl.classList.add('is-portfolio');
+        contentEl.innerHTML = `
+          <h2>${t('portTitle')}</h2>
+          <p class="subhead">${t('portSub')}</p>
+          <div id="portfolioDiagram">${renderPortfolioDiagram()}</div>
+          <p class="portfolio-hint">${t('donutHint')}</p>
+          <div id="portfolioDetail" class="allocation-detail" aria-live="polite">${renderPortfolioDetail()}</div>
+        `;
+        bottomBar.innerHTML = `<button class="btn primary" onclick="nextScreen()">${t('continue')} →</button>`;
+      }
+
+      if (screens[screenIndex] === 'longterm') {
+        contentEl.innerHTML = `
+          <h2>${t('longTitle')}</h2>
+          <p class="subhead">${t('longSub')}</p>
+          ${renderChart()}
+        `;
+        bottomBar.innerHTML = `
+          <button class="btn secondary" onclick="prevScreen()">←</button>
+          <button class="btn primary" onclick="nextScreen()">${t('continue')} →</button>
+        `;
+      }
+
+      if (screens[screenIndex] === 'done') {
+        contentEl.innerHTML = `
+          <div class="success-check">✓</div>
+          <h2 style="text-align:center;">${t('doneTitle')}</h2>
+          <p class="subhead" style="text-align:center;">${t('doneSub')}</p>
+          <div class="summary-card">
+            <div class="summary-row">
+              <div class="icon-circle blue">📅</div>
+              <div><strong>${money(selectedAmount)} / ${t('perMonth')}</strong><p>${t('summary1b')}</p></div>
+              <div></div>
+            </div>
+            <div class="summary-row">
+              <div class="icon-circle teal">📊</div>
+              <div><strong>${t('summary2t')}</strong><p>${t('summary2b')}</p></div>
+              <div></div>
+            </div>
+            <div class="summary-row">
+              <div class="icon-circle green">🕒</div>
+              <div><strong>${t('summary3t')}</strong><p>${t('summary3b')}</p></div>
+              <div></div>
+            </div>
+          </div>
+          <div class="risk-grid">
+            <div class="risk-card">
+              <strong>${t('risk1t')}</strong>
+              <p>${t('risk1b')}</p>
+            </div>
+            <div class="risk-card">
+              <strong>${t('risk2t')}</strong>
+              <p>${t('risk2b')}</p>
+            </div>
+            <div class="risk-card warning">
+              <strong>${t('risk3t')}</strong>
+              <p>${t('risk3b')}</p>
+            </div>
+          </div>
+        `;
+        bottomBar.innerHTML = `<button class="btn primary" onclick="goCreating()">${t('finish')} →</button>`;
+      }
+
+      if (screens[screenIndex] === 'creating') {
+        contentEl.innerHTML = renderCreating();
+        bottomBar.innerHTML = '';
+      }
+      if (screens[screenIndex] === 'home') {
+        contentEl.innerHTML = renderHomeTab();
+        bottomBar.innerHTML = renderHomeNav();
+      }
+      renderProgress();
+    }
+
+    function nextScreen() {
+      if (screenIndex < screens.length - 1) {
+        screenIndex += 1;
+        renderScreen();
+      }
+    }
+    function prevScreen() {
+      if (screenIndex > 0) {
+        screenIndex -= 1;
+        renderScreen();
+      }
+    }
+    function goToStart() {
+      screenIndex = 0;
+      renderScreen();
+    }
+    function goHome() {
+      homeTab='home';
+      screenIndex = screens.indexOf('home');
+      renderScreen();
+    }
+    function selectAmount(amount) {
+      selectedAmount = amount;
+      renderScreen();
+    }
+    function setChart(view) {
+      chartView = view;
+      renderScreen();
+    }
+    function setLanguage(code) {
+      currentLang = code;
+      langMenu.classList.remove('open');
+      renderScreen();
+    }
+
+    langBtn.addEventListener('click', () => {
+      langMenu.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+      if (!langBtn.contains(e.target) && !langMenu.contains(e.target)) {
+        langMenu.classList.remove('open');
+      }
+    });
+    backBtn.addEventListener('click', prevScreen);
+
+    renderLanguageMenu();
+    renderScreen();
+    if(marketFeedUrl)refreshMarketFeed();
+    setInterval(()=>{if(!document.hidden&&marketFeedUrl)refreshMarketFeed()},600000);
+  </script>
+</body>
+</html>
