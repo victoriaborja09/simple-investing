@@ -2,6 +2,8 @@
 /* Learn v2 views: market detail, watchlist, paper brokerage and education. */
 function l2graph(bars,period,color){
  if(!Array.isArray(bars)||bars.length<2)return '<div class="empty">'+lt('noHistory')+'</div>';
+ // Plot at most 200 actual observations to keep the iPhone chart responsive.
+ if(bars.length>200){const step=Math.ceil((bars.length-1)/199);bars=bars.filter((_,i)=>i%step===0||i===bars.length-1)}
  const vals=bars.map(x=>x.close),lo=Math.min(...vals),hi=Math.max(...vals),spread=Math.max(.01,hi-lo);
  const min=Math.max(0,lo-spread*.2),max=hi+spread*.2;
  const W=308,H=170,L=5,R=4,T=10,B=16;
@@ -124,14 +126,17 @@ function l2paperHistory(){
  const times=[...new Set(Object.values(series).flatMap(b=>b.map(v=>v.time)))].sort();
  const first=trades[0].time.slice(0,10);
  const points=[];
- let cash=500,index=0,shares={};
+ let cash=500,index=0,shares={},prices={};
  const sorted=[...trades].sort((a,b)=>a.time.localeCompare(b.time));
- let prices={};
+ const cursors=Object.fromEntries(symbols.map(s=>[s,0]));
  for(const t of times){
   if(t.slice(0,10)<first)continue;
   for(const symbol of symbols){
-   const rows=series[symbol];const relevant=rows.filter(p=>p.time<=t);
-   if(relevant.length)prices[symbol]=relevant.at(-1).close;
+   const rows=series[symbol];
+   while(cursors[symbol]<rows.length&&rows[cursors[symbol]].time<=t){
+    prices[symbol]=rows[cursors[symbol]].close;
+    cursors[symbol]++;
+   }
   }
   while(index<sorted.length&&sorted[index].time.slice(0,10)<=t.slice(0,10)){
    const tr=sorted[index++];
@@ -140,7 +145,7 @@ function l2paperHistory(){
   }
   const held=symbols.filter(s=>(shares[s]||0)>1e-7);
   if(held.some(s=>!(prices[s]>0)))continue;
-  let balance=cash+held.reduce((sum,s)=>sum+shares[s]*prices[s],0);
+  const balance=cash+held.reduce((sum,s)=>sum+shares[s]*prices[s],0);
   if(Number.isFinite(balance))points.push({time:t,close:balance});
  }
  return points;
