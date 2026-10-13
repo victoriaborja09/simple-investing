@@ -1660,11 +1660,7 @@
       return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',
         minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
     }
-    function rangeName(id){
-      return ({'1d':'past day','1w':'past week','1m':'past month',
-        '3m':'past 3 months','ytd':'year to date','1y':'past year',
-        'all':'since starting'})[id]||id;
-    }
+    function rangeName(id){return ui('range'+id);}
 
     function fundYtd(ticker){
       if(liveMarket?.daily?.length){
@@ -1692,19 +1688,20 @@
       return label;
     }
     function homeStatusLabel(){
-      if(!liveMarket)return 'Sample through Sep 2026';
+      if(!liveMarket)return ui('sample');
       const last=marketLastDate();
-      if(!last)return 'Market data · quote date unavailable';
-      const label=new Date(last+'T12:00:00Z').toLocaleDateString('en-US',
+      if(!last)return ui('market')+' · '+ui('quoteMissing');
+      const locale={en:'en-US',es:'es-ES',fr:'fr-FR',it:'it-IT'}[currentLang]||'en-US';
+      const label=new Date(last+'T12:00:00Z').toLocaleDateString(locale,
         {month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
-      return (liveMarket.source||'Market data')+' · quotes through '+label;
+      return (liveMarket.source||ui('market'))+' · '+ui('quotes')+' '+label;
     }
         function renderHomeDashboard(){
       const history=accountPath(),last=history.at(-1);
       const shown=accountWindow(history);
       const period=periodPerformance(shown);
       const width=330,height=206,left=12,top=16,right=7,bottom=15;
-      const demoTitle=liveMarket?(marketQuotesDelayed()?'Quotes delayed':'Market data'):'Demo only';
+      const demoTitle=liveMarket?(marketQuotesDelayed()?ui('delayed'):ui('market')):ui('demo');
       let chartMarkup='';let periodMarkup='';
       if(shown&&shown.length>=2){
         const min=Math.max(0,Math.min(...shown.map(x=>x.balance))*0.93);
@@ -1715,36 +1712,36 @@
         const area=`${points[0].x},${height-bottom} ${coords} ${points.at(-1).x},${height-bottom}`;
         const grid=[.1,.5,.9].map(f=>{let y=top+f*(height-top-bottom);return `<line x1="${left}" x2="${width-right}" y1="${y}" y2="${y}" stroke="#e3f0e8" stroke-width="1"/>`;}).join('');
         const dots=points.slice(1).map(p=>`<circle cx="${p.x}" cy="${p.y}" r="6" fill="transparent"><title>${p.date}: ${money(p.balance)} with ${money(p.deposits)} contributed</title></circle>`).join('');
-        chartMarkup=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Simulated ${money(selectedAmount)} monthly investment portfolio value">
+        chartMarkup=`<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${ui('simulated')} ${money(selectedAmount)} ${ui('monthlyDeposits')}">
          <defs><linearGradient id="accountFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#baf8d0" stop-opacity=".88"/><stop offset="100%" stop-color="#e8fff0" stop-opacity="0"/></linearGradient></defs>
          ${grid}<polygon points="${area}" fill="url(#accountFill)"/><polyline points="${coords}" fill="none" stroke="#21c662" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
          <circle cx="${points.at(-1).x}" cy="${points.at(-1).y}" r="4.5" fill="#21c662" stroke="#fff" stroke-width="2"/>${dots}</svg>`;
         periodMarkup=`<div class="account-period"><span>${homeAxisDate(shown[0].date)}</span><span>${homeAxisDate(shown.at(-1).date)}</span></div>`;
       } else {
-        const explain=!liveMarket?'Connect a market-data feed to view intraday changes.':'Intraday bars were not included in the connected feed.';
-        chartMarkup=`<div class="account-chart-unavailable"><strong>${homeRange.toUpperCase()} market history unavailable</strong><span>${explain}</span></div>`;
+        const explain=!liveMarket?ui('noFeed'):ui('noIntra');
+        chartMarkup=`<div class="account-chart-unavailable"><strong>${homeRange.toUpperCase()} ${ui('marketUnavailable')}</strong><span>${explain}</span></div>`;
         periodMarkup=`<div class="account-period"><span>${homeStatusLabel()}</span><span></span></div>`;
       }
       const assetTiles=portfolioAssets.map(a=>`<button class="asset-mini" type="button" onclick="showHomeAsset('${a.ticker}')" aria-label="View ${a.ticker} details">
         <div class="asset-mini-top"><i class="asset-mini-dot" style="background:${a.color}"></i>${a.ticker}</div>
         <div class="asset-mini-weight">${a.pct}%</div><div class="asset-mini-ytd">${pct(fundYtd(a.ticker))} YTD</div></button>`).join('');
       const gain=period?.gain ?? null;
-      const changeText=gain===null ? 'Period performance unavailable' :
+      const changeText=gain===null ? ui('unavailable') :
         (gain>=0?'+':'−')+moneyChange(Math.abs(gain))+' ('+pct(period.percent)+') · '+rangeName(homeRange);
       return `<div class="account-view">
         <div class="account-head"><strong>Simple Investing</strong><span class="demo-pill">${demoTitle}</span></div>
         <div class="account-amount">${money(last.balance)}</div>
         <div class="account-gain ${gain!==null&&gain<0?'negative':''}">${changeText}</div>
         <div class="account-sub">${homeStatusLabel()} · ${money(selectedAmount)}/${t('perMonth')}</div>
-        <div class="account-range" role="group" aria-label="Portfolio history period">
-          ${[['1d','1D'],['1w','1W'],['1m','1M'],['3m','3M'],['ytd','YTD'],['1y','1Y'],['all','All']].map(([id,label])=>`<button class="${homeRange===id?'active':''}" onclick="setHomeRange('${id}')" aria-pressed="${homeRange===id}">${label}</button>`).join('')}
+        <div class="account-range" role="group" aria-label="${ui('homeGroup')}">
+          ${rangeChoices().map(([id,label])=>`<button class="${homeRange===id?'active':''}" onclick="setHomeRange('${id}')" aria-pressed="${homeRange===id}">${label}</button>`).join('')}
         </div>
         <div class="account-chart">${chartMarkup}</div>${periodMarkup}
         <div class="account-tiles"><div class="account-tile"><small>${t('contributed')} · ${homeRange.toUpperCase()}</small><strong>${period?money(period.contributed):'—'}</strong></div>
         <div class="account-tile"><small>${t('accountGrowth')} · ${homeRange.toUpperCase()}</small><strong class="${gain!==null&&gain>=0?'positive':gain!==null?'negative':''}">${gain===null?'—':(gain>=0?'+':'−')+moneyChange(Math.abs(gain))}</strong></div></div>
         <div class="account-section"><strong>${t('investmentsTitle')}</strong><span>${t('holdingsInfo')}</span></div>
         <div class="asset-mini-grid">${assetTiles}</div>
-        <p class="account-market-status">${liveMarket?'Simulated purchases start May 1, 2026. Dividends reinvested.':'Sample values only. Current market data is temporarily unavailable.'}</p>
+        <p class="account-market-status">${ui('notes')} ${liveMarket?ui('feedNote'):ui('sampleNote')}</p>
       </div>`;
     }
     async function refreshMarketFeed(){
@@ -1900,7 +1897,27 @@
     function setPortfolioTicker(ticker){
       if(!ASSET_WEIGHTS[ticker])return;
       portfolioTicker=ticker;
+      portfolioMenuOpen=false;
       if(screens[screenIndex]==='home'&&homeTab==='portfolio')renderScreen();
+    }
+    function togglePortfolioMenu(){
+      portfolioMenuOpen=!portfolioMenuOpen;
+      if(screens[screenIndex]==='home'&&homeTab==='portfolio'){
+        renderScreen();
+        document.getElementById('portfolioTickerButton')?.focus();
+      }
+    }
+    function portfolioPickerKeydown(e){
+      if(e.key==='Escape'&&portfolioMenuOpen){
+        e.preventDefault();portfolioMenuOpen=false;renderScreen();
+        document.getElementById('portfolioTickerButton')?.focus();
+      }
+      if((e.key==='ArrowDown'||e.key==='ArrowUp')&&!portfolioMenuOpen){
+        e.preventDefault();portfolioMenuOpen=true;renderScreen();
+        const choices=[...document.querySelectorAll('.holding-menu-option')];
+        const index=portfolioAssets.findIndex(a=>a.ticker===portfolioTicker);
+        choices[index>=0?index:0]?.focus();
+      }
     }
 
     function renderHomeTab() {
@@ -1909,7 +1926,7 @@
       const k=homeTab==='learn'?'accountNavLearn':'accountNavYou';
       return `<div class="account-placeholder"><div class="bigicon">◌</div><h2>${t(k)}</h2><p>${t('placeholderTitle')}</p></div>`;
     }
-    function openHomeTab(id){ homeTab=id; homeSelectedAsset=null; renderScreen(); }
+    function openHomeTab(id){ homeTab=id; homeSelectedAsset=null; portfolioMenuOpen=false; renderScreen(); }
     function setHomeRange(id){ homeRange=id; renderScreen(); }
     function showHomeAsset(ticker){
       homeSelectedAsset=ticker;
@@ -2117,6 +2134,8 @@
     function setLanguage(code) {
       currentLang = code;
       langMenu.classList.remove('open');
+      portfolioMenuOpen=false;
+      document.documentElement.lang=code;
       renderScreen();
     }
 
@@ -2129,6 +2148,19 @@
       }
     });
     backBtn.addEventListener('click', prevScreen);
+    document.addEventListener('click',e=>{
+      if(portfolioMenuOpen && !e.target.closest('.holding-dropdown')){
+        portfolioMenuOpen=false;
+        if(screens[screenIndex]==='home'&&homeTab==='portfolio')renderScreen();
+      }
+    });
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape'&&portfolioMenuOpen){
+        portfolioMenuOpen=false;
+        if(screens[screenIndex]==='home'&&homeTab==='portfolio')renderScreen();
+        document.getElementById('portfolioTickerButton')?.focus();
+      }
+    });
 
     renderLanguageMenu();
     renderScreen();
