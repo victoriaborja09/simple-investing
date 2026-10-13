@@ -28,9 +28,10 @@ function l2tickerRow(asset){
 function l2resultRows(){
  const matches=l2matching();
  const rows=matches.length?matches.map(l2tickerRow).join(''):'<div class="empty">'+lt('noMatch')+'</div>';
- return rows+(L2.search.trim()?'<button type="button" class="linkbtn" onclick="learnOutside()">'+lt('searchMore')+' ↗</button>':'')+
+ return rows+(L2.search.trim()?'<button type="button" class="linkbtn" onclick="l2openWide()">'+lt('searchMore')+' ↗</button>':'')+
  (L2.searchStatus==='offline'?'<div class="safehint">'+lt('searchUnavailable')+'</div>':'');
 }
+function l2openWide(){if(L2.search.trim())window.open('https://finance.yahoo.com/lookup/?s='+encodeURIComponent(L2.search.trim()),'_blank','noopener,noreferrer')}
 function l2searchBlock(){
  return '<label class="searchbox"><span aria-hidden="true">⌕</span>'+
  '<input type="search" id="l2search" value="'+l2safe(L2.search)+'" placeholder="'+lt('search')+'" aria-label="'+lt('search')+'" oninput="l2searchInput(this.value)" /></label>';
