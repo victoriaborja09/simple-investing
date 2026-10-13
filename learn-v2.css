@@ -1,0 +1,96 @@
+
+/* Simple Investing | Learn v2
+   Scoped to .learn2 to avoid altering Home, Portfolio or onboarding. */
+.learn2{color:#16291e;padding:4px 0 26px}
+.learn2 *{box-sizing:border-box}
+.learn2 button,.learn2 input{font-family:inherit}
+.learn2 button{cursor:pointer}
+.learn2 h2{font-size:23px;letter-spacing:-.042em;line-height:1.13;margin:4px 0 7px}
+.learn2 .eyebrow{color:#0d9a56;font-size:10px;letter-spacing:.1em;font-weight:850;text-transform:uppercase}
+.learn2 .hint{font-size:11px;line-height:1.45;color:#748477;margin:4px 0 13px}
+.learn2 .searchbox{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dce8df;border-radius:15px;padding:0 12px;min-height:46px;box-shadow:0 5px 17px rgba(18,69,36,.04)}
+.learn2 .searchbox:focus-within{border-color:#26c878;box-shadow:0 0 0 3px #e7faee}
+.learn2 .searchbox>span{color:#1ca861;font-size:19px}
+.learn2 .searchbox input{border:0;outline:0;width:100%;min-width:0;font-size:12px;background:transparent;color:#16291e;height:45px}
+.learn2 .navtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:#edf4ee;padding:4px;border-radius:13px;margin:12px 0 15px}
+.learn2 .navtabs button{background:transparent;color:#708174;border:0;border-radius:10px;font-size:11px;font-weight:730;padding:9px 3px}
+.learn2 .navtabs button.active{background:#fff;color:#11834a;box-shadow:0 1px 9px #1b4c2612}
+.learn2 .sectionline{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:15px 1px 9px}
+.learn2 .sectionline strong{font-size:12px;letter-spacing:-.01em}
+.learn2 .sectionline small{font-size:10px;color:#8d9b90}
+.learn2 .chips{display:flex;gap:6px;margin:7px 0 11px;flex-wrap:wrap}
+.learn2 .chips button{border:1px solid #dce9df;background:#fff;border-radius:100px;font-size:11px;font-weight:730;color:#34855a;padding:7px 11px}
+.learn2 .assetrow{display:flex;align-items:center;gap:9px;padding:10px;background:#fff;border:1px solid #e3ebe5;border-radius:15px;margin-bottom:7px}
+.learn2 .symicon{display:flex;align-items:center;justify-content:center;width:35px;height:35px;flex:none;background:#e6f9ed;color:#148950;border-radius:11px;font-size:10px;font-weight:850}
+.learn2 .symicon.etf{color:#316da8;background:#eaf2ff}
+.learn2 .assetname{flex:1;min-width:0;text-align:left;border:0;background:none;padding:0}
+.learn2 .assetname strong{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:12px;color:#1c3426}
+.learn2 .assetname small{display:block;margin-top:3px;font-size:10px;color:#809385}
+.learn2 .star{height:33px;width:33px;border:1px solid #dce8de;background:#f8fcf9;border-radius:10px;color:#809889;font-size:18px}
+.learn2 .star.on{background:#def8e7;color:#169e57}
+.learn2 .empty{border:1px dashed #cfdfd0;border-radius:15px;padding:20px 13px;text-align:center;font-size:11px;line-height:1.5;color:#748276}
+.learn2 .linkbtn{border:0;background:transparent;color:#0f9350;font-size:11px;font-weight:800;padding:10px 0}
+.learn2 .lessonrow{display:flex;align-items:center;gap:9px;width:100%;padding:11px;text-align:left;border:1px solid #e1ece3;border-radius:14px;background:#fff;margin-bottom:7px}
+.learn2 .lessonrow .emblem{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#e9f9ef;border-radius:11px;color:#109856;flex:none;font-size:19px}
+.learn2 .lessonrow span.words{flex:1;min-width:0}
+.learn2 .lessonrow strong{font-size:12px;display:block}
+.learn2 .lessonrow small{font-size:10px;color:#849688;display:block;line-height:1.3;margin-top:3px}
+.learn2 .banner{padding:15px;border-radius:18px;background:#15281b;color:#fff;margin:15px 0}
+.learn2 .banner strong{font-size:13px}
+.learn2 .banner p{font-size:11px;line-height:1.5;color:#b6ccbc;margin:7px 0 11px}
+.learn2 .banner button{display:block;width:100%;border:0;background:#21ce75;color:#10321b;border-radius:11px;padding:11px;font-size:11px;font-weight:850;margin-top:12px}
+.learn2 .safehint{margin-top:13px;padding:11px;border-radius:12px;background:#eef9f1;font-size:11px;color:#51735d;line-height:1.5}
+.learn2 .back{font-size:11px;font-weight:800;background:none;border:0;color:#237f4d;padding:4px 0 13px}
+.learn2 .detail-head{display:flex;align-items:center;gap:10px}
+.learn2 .detail-head .symicon{width:41px;height:41px;font-size:12px}
+.learn2 .detail-head h2{font-size:20px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.learn2 .detail-head small{font-size:10px;color:#77887d}
+.learn2 .quotevalue{font-size:32px;letter-spacing:-.06em;font-weight:840;margin:15px 0 2px;line-height:1.1}
+.learn2 .quotedelta{font-size:12px;font-weight:750;margin-bottom:11px}
+.learn2 .up{color:#08a65d}.learn2 .down{color:#d65259}.learn2 .neutral{color:#718475}
+.learn2 .periods{display:flex;justify-content:space-between;gap:1px;background:#f0f6f1;border-radius:11px;padding:4px 3px;margin:8px 0 10px}
+.learn2 .periods button{font-size:10px;font-weight:760;color:#768a7c;background:transparent;border:0;border-radius:8px;padding:7px 2px;flex:1}
+.learn2 .periods button.active{background:#fff;color:#16864d;box-shadow:0 2px 7px #153c2114}
+.learn2 .chartframe{background:#f5fbf6;border:1px solid #e2f1e5;border-radius:16px;padding:9px 7px}
+.learn2 svg.stockplot{width:100%;height:178px;display:block}
+.learn2 .between{display:flex;justify-content:space-between;color:#8da094;font-size:9px;margin:4px}
+.learn2 .twocol{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.learn2 .stat{background:#fff;border:1px solid #e4ebe6;border-radius:14px;padding:12px 11px;min-height:65px}
+.learn2 .stat small{font-size:10px;display:block;color:#819084;margin-bottom:7px}
+.learn2 .stat strong{font-size:15px;display:block;line-height:1.1}
+.learn2 .detail-actions{display:flex;gap:7px;margin:12px 0}
+.learn2 .detail-actions button{flex:1;border-radius:12px;border:1px solid #cfdfd3;padding:11px 6px;background:#fff;font-weight:800;font-size:11px;color:#377e53}
+.learn2 .detail-actions .primary{color:#11351d;background:#24cc75;border-color:#24cc75}
+.learn2 .watchgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.learn2 .watchbox{border:1px solid #e0e8e1;border-radius:15px;padding:12px;min-height:135px;background:#fff;text-align:left;display:flex;flex-direction:column;gap:5px}
+.learn2 .watchbox.up{background:#e9f9ef;border-color:#ccebd8;color:#145c39}
+.learn2 .watchbox.down{background:#fff0f0;border-color:#f2d6d7;color:#8d333c}
+.learn2 .watchbox .ticker{font-size:12px;font-weight:850;color:#1b3625}
+.learn2 .watchbox .price{font-size:18px;font-weight:850;color:#1b3323;margin-top:7px}
+.learn2 .watchbox .move{font-size:11px;font-weight:800}
+.learn2 .watchbox small{color:#728b78;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.learn2 .practice-top{border:1px solid #d6ebe0;border-radius:18px;background:linear-gradient(145deg,#f5fff8,#e5f9e9);padding:15px}
+.learn2 .practice-top .balance{font-size:30px;font-weight:840;letter-spacing:-.05em;margin:6px 0 4px}
+.learn2 .practice-top .meta{display:flex;justify-content:space-between;font-size:11px;color:#60836d}
+.learn2 .holding{display:flex;align-items:center;gap:9px;padding:11px;background:white;border:1px solid #e1eae2;border-radius:14px;margin-bottom:7px}
+.learn2 .holding button{background:transparent;border:0;text-align:left;flex:1;min-width:0}
+.learn2 .holding strong{font-size:12px;display:block}
+.learn2 .holding small{font-size:10px;color:#7d8e81;display:block;margin-top:4px}
+.learn2 .holding .right{text-align:right}
+.learn2 .holding .right strong{font-size:12px}
+.learn2 .record{padding:9px 0;border-bottom:1px solid #e7eee9;display:flex;justify-content:space-between;font-size:11px}
+.learn2 .muted{font-size:10px;color:#849689}
+.learn2 .err{color:#bd515c;background:#fff2f3;border-radius:11px;font-size:11px;line-height:1.5;padding:11px;margin:9px 0}
+.learn2 .pending{font-size:11px;color:#789084;padding:10px 1px}
+.learn2 .modal-bg{position:absolute;inset:0;z-index:90;background:#132d1b94;display:flex;align-items:flex-end;padding:10px}
+.learn2 .modal-panel{width:100%;max-height:83%;overflow:auto;background:#fff;border-radius:24px 24px 19px 19px;padding:19px 16px 23px}
+.learn2 .modal-panel h3{font-size:20px;letter-spacing:-.03em;margin:5px 0 9px}
+.learn2 .modal-panel p{font-size:11px;color:#68806c;line-height:1.52}
+.learn2 .modal-panel .close{float:right;width:29px;height:29px;border:0;border-radius:10px;background:#f0f7f2;color:#52765c;font-size:18px}
+.learn2 .amounts{display:flex;gap:8px;margin:13px 0}
+.learn2 .amounts button{flex:1;padding:10px;border:1px solid #dbe9de;border-radius:11px;background:white;font-weight:800}
+.learn2 .amounts button.active{background:#e4f9e9;border-color:#22ca72;color:#118349}
+.learn2 .custom{width:100%;height:42px;border-radius:11px;border:1px solid #dce9df;padding:0 12px;outline:0}
+.learn2 .modal-panel .confirm{background:#21cd72;border:none;color:#10301a;padding:12px;border-radius:12px;font-weight:850;width:100%;margin-top:9px}
+.learn2 .modal-panel .secondary{border:1px solid #dce9df;color:#247648;background:white;padding:11px;border-radius:11px;font-weight:800;width:100%;margin-top:7px}
+.learn2 button:focus-visible{outline:2px solid #24c874;outline-offset:2px}
