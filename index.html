@@ -1590,6 +1590,34 @@
       }
       return base.length>=2?base:null;
     }
+    function periodPerformance(points){
+      if(!points || points.length<2)return null;
+      const first=points[0],last=points.at(-1);
+      const contributed=last.deposits-first.deposits;
+      const gain=last.balance-first.balance-contributed;
+      function time(s){
+        const date=s.slice(0,10),clock=s.length>10?s.slice(11,19):'16:00:00';
+        return Date.parse(date+'T'+clock.padEnd(8,'0')+'Z');
+      }
+      const begin=time(first.date),end=time(last.date),duration=Math.max(1,end-begin);
+      let capital=first.balance;
+      for(let i=1;i<points.length;i++){
+        const flow=points[i].deposits-points[i-1].deposits;
+        if(flow)capital+=flow*Math.max(0,Math.min(1,(end-time(points[i].date))/duration));
+      }
+      return {contributed,gain,percent:capital>0?gain/capital:null,
+        startDate:first.date,endDate:last.date};
+    }
+    function moneyChange(n){
+      return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',
+        minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+    }
+    function rangeName(id){
+      return ({'1d':'past day','1w':'past week','1m':'past month',
+        '3m':'past 3 months','ytd':'year to date','1y':'past year',
+        'all':'since starting'})[id]||id;
+    }
+
     function fundYtd(ticker){
       if(liveMarket?.daily?.length){
         const rows=liveMarket.daily.filter(r=>Number(r[ticker])>0);
@@ -1614,6 +1642,7 @@
     function renderHomeDashboard(){
       const history=accountPath(),last=history.at(-1);
       const shown=accountWindow(history);
+      const period=periodPerformance(shown);
       const width=330,height=206,left=12,top=16,right=7,bottom=15;
       const demoTitle=liveMarket?'Connected':'Demo only';
       let chartMarkup='';let periodMarkup='';
@@ -1639,18 +1668,20 @@
       const assetTiles=portfolioAssets.map(a=>`<button class="asset-mini" type="button" onclick="showHomeAsset('${a.ticker}')" aria-label="View ${a.ticker} details">
         <div class="asset-mini-top"><i class="asset-mini-dot" style="background:${a.color}"></i>${a.ticker}</div>
         <div class="asset-mini-weight">${a.pct}%</div><div class="asset-mini-ytd">${pct(fundYtd(a.ticker))} YTD</div></button>`).join('');
-      const gain=last.balance-last.deposits;
+      const gain=period?.gain ?? null;
+      const changeText=gain===null ? 'Period performance unavailable' :
+        (gain>=0?'+':'−')+moneyChange(Math.abs(gain))+' ('+pct(period.percent)+') · '+rangeName(homeRange);
       return `<div class="account-view">
         <div class="account-head"><strong>Simple Investing</strong><span class="demo-pill">${demoTitle}</span></div>
         <div class="account-amount">${money(last.balance)}</div>
-        <div class="account-gain ${gain<0?'negative':''}">${gain>=0?'+':''}${money(gain)} ${t('accountGrowth').toLowerCase()}</div>
+        <div class="account-gain ${gain!==null&&gain<0?'negative':''}">${changeText}</div>
         <div class="account-sub">${homeStatusLabel()} · ${money(selectedAmount)}/${t('perMonth')}</div>
         <div class="account-range" role="group" aria-label="Portfolio history period">
           ${[['1d','1D'],['1w','1W'],['1m','1M'],['3m','3M'],['ytd','YTD'],['1y','1Y'],['all','All']].map(([id,label])=>`<button class="${homeRange===id?'active':''}" onclick="setHomeRange('${id}')" aria-pressed="${homeRange===id}">${label}</button>`).join('')}
         </div>
         <div class="account-chart">${chartMarkup}</div>${periodMarkup}
-        <div class="account-tiles"><div class="account-tile"><small>${t('contributed')}</small><strong>${money(last.deposits)}</strong></div>
-        <div class="account-tile"><small>${t('accountGrowth')}</small><strong class="${gain>=0?'positive':''}">${gain>=0?'+':''}${money(gain)}</strong></div></div>
+        <div class="account-tiles"><div class="account-tile"><small>${t('contributed')} · ${homeRange.toUpperCase()}</small><strong>${period?money(period.contributed):'—'}</strong></div>
+        <div class="account-tile"><small>${t('accountGrowth')} · ${homeRange.toUpperCase()}</small><strong class="${gain!==null&&gain>=0?'positive':gain!==null?'negative':''}">${gain===null?'—':(gain>=0?'+':'−')+moneyChange(Math.abs(gain))}</strong></div></div>
         <div class="account-section"><strong>${t('investmentsTitle')}</strong><span>${t('holdingsInfo')}</span></div>
         <div class="asset-mini-grid">${assetTiles}</div>
         <p class="account-market-status">${liveMarket?'Simulated purchases start May 1, 2026. Dividends reinvested.':'Sample values only. Current market data is temporarily unavailable.'}</p>
