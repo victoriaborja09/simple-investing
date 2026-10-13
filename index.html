@@ -730,7 +730,7 @@
     .holding-label {display:block;color:#6d8074;font-size:11px;font-weight:700;margin:8px 0 7px}
     .holding-select-wrap {display:flex;align-items:center;gap:9px;border:1px solid #dae8dc;border-radius:15px;background:#fff;padding:0 11px;height:44px;margin-bottom:14px;box-shadow:0 4px 14px rgba(28,77,44,.04);position:relative}
     .holding-select-wrap .asset-mini-dot {flex:0 0 9px;width:9px;height:9px;border-radius:50%;display:block}
-    .holding-select-wrap select {flex:1;min-width:0;height:100%;font:600 12px inherit;color:#172b21;border:0;outline:none;background:transparent;appearance:none;cursor:pointer}
+    .holding-select-wrap select {flex:1;min-width:0;height:100%;font-family:inherit;font-size:12px;font-weight:600;color:#172b21;border:0;outline:none;background:transparent;appearance:none;cursor:pointer}
     .holding-arrow {pointer-events:none;color:#739385;font-size:17px}
     .holding-explanation {font-size:11px;line-height:1.46;color:#647668;margin:12px 1px 4px}
     .account-view { animation:homeAppear .45s ease-out both; }
@@ -1673,16 +1673,18 @@
     }
     function homeStatusLabel(){
       if(!liveMarket)return 'Sample through Sep 2026';
-      const last=liveMarket.intraday?.at(-1)?.time || liveMarket.daily?.at(-1)?.date || liveMarket.asOf;
-      const stamp=/^\d{4}-\d{2}-\d{2}$/.test(last)?new Date(last+'T12:00:00Z'):new Date(last);
-      return `${liveMarket.source||'Market data'} · ${stamp.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'America/New_York'})}`;
+      const last=marketLastDate();
+      if(!last)return 'Market data · quote date unavailable';
+      const label=new Date(last+'T12:00:00Z').toLocaleDateString('en-US',
+        {month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
+      return (liveMarket.source||'Market data')+' · quotes through '+label;
     }
-    function renderHomeDashboard(){
+        function renderHomeDashboard(){
       const history=accountPath(),last=history.at(-1);
       const shown=accountWindow(history);
       const period=periodPerformance(shown);
       const width=330,height=206,left=12,top=16,right=7,bottom=15;
-      const demoTitle=liveMarket?'Connected':'Demo only';
+      const demoTitle=liveMarket?(marketQuotesDelayed()?'Quotes delayed':'Market data'):'Demo only';
       let chartMarkup='';let periodMarkup='';
       if(shown&&shown.length>=2){
         const min=Math.max(0,Math.min(...shown.map(x=>x.balance))*0.93);
@@ -1842,6 +1844,8 @@
         '<span>'+homeAxisDate(shown[0].date)+'</span><span>'+homeAxisDate(shown.at(-1).date)+'</span>':
         '<span>'+homeStatusLabel()+'</span><span></span>';
       const delayed=marketQuotesDelayed();
+      const pending=aggregate.at(-1)?.pendingCash||0;
+      const purpose={SPYM:'U.S. large-company stocks, including the S&P 500.',VXUS:'Companies in developed and emerging international markets.',SGOV:'Short-term U.S. Treasury bills, designed to limit interest-rate risk.'}[asset.ticker];
       const status=liveMarket?(delayed?'Quotes delayed':'Market data'):'Demo only';
       const deposit=performance?moneyChange(performance.contributed):'—';
       const profit=gain===null?'—':(gain>=0?'+':'−')+moneyChange(Math.abs(gain));
@@ -1857,8 +1861,8 @@
         '</div><div class="account-chart">'+chart+'</div><div class="account-period">'+dates+'</div>'+
         '<div class="account-tiles"><div class="account-tile"><small>Contributed · '+homeRange.toUpperCase()+'</small><strong>'+deposit+'</strong></div>'+
         '<div class="account-tile"><small>Investment growth · '+homeRange.toUpperCase()+'</small><strong class="'+(gain!==null&&gain>=0?'positive':gain!==null?'negative':'')+'">'+profit+'</strong></div></div>'+
-        '<p class="holding-explanation">'+t(asset.detailKey)+'</p>'+
-        '<p class="account-market-status">Based on simulated '+money(selectedAmount)+' monthly deposits, allocated '+asset.pct+'% to '+asset.ticker+'. '+(liveMarket?'ETF returns use connected historical market data.':'Historical sample, not live prices.')+'</p>'+
+        '<p class="holding-explanation">'+purpose+'</p>'+
+        '<p class="account-market-status">Simulated '+money(selectedAmount)+' monthly deposits. '+(pending?'A further '+moneyChange(pending)+' is temporarily uninvested cash. ':'')+(liveMarket?'ETF prices reflect available market data.':'Historical sample, not live prices.')+'</p>'+
         '</div>';
     }
     function setPortfolioTicker(ticker){
