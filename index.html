@@ -2236,7 +2236,7 @@ const learnLessons=[["stocks","◧",{"en":"What is a stock?","es":"¿Qué es una
   function learnRow(x){const saved=learnSaved.includes(x.id);return '<div class="learn-item"><span class="learn-icon '+(x.kind==='etf'?'etf':'')+'">'+(x.kind==='etf'?'ETF':x.id.slice(0,2))+'</span><button class="name" onclick="learnOpen(\''+x.id+'\')"><strong>'+le(x.name)+'</strong><small>'+x.id+' · '+lw(x.kind)+'</small></button><button class="learn-star '+(saved?'selected':'')+'" onclick="learnStar(\''+x.id+'\')" aria-pressed="'+saved+'">'+(saved?'★':'☆')+'</button></div>'}
   function learnRows(){return (learnResults().length?learnResults().map(learnRow).join(''):'<div class="learn-empty">'+lw('notFound')+'</div>')+(learnQ.trim()?'<button class="learn-external" onclick="learnOutside()">'+lw('more')+' ↗</button>':'')}
   function learnOutside(){if(learnQ.trim())window.open('https://finance.yahoo.com/lookup/?s='+encodeURIComponent(learnQ.trim()),'_blank','noopener,noreferrer')}
-  function learnInput(v){learnQ=v.slice(0,70);const e=document.getElementById('learnRows');if(e)e.innerHTML=learnRows()}
+  function learnInput(v){learnQ=v.slice(0,70);if(learnTab!=='explore'){learnTab='explore';renderScreen();const input=document.querySelector('.learn-search input');if(input){input.focus();input.setSelectionRange(learnQ.length,learnQ.length)}return}const e=document.getElementById('learnRows');if(e)e.innerHTML=learnRows()}
   function learnTabSet(tab){learnTab=tab;renderScreen()}
   function learnPreset(q){learnQ=q;learnTab='explore';renderScreen()}
   function learnStar(id){if(!learnAssets.some(x=>x.id===id))return;learnSaved=learnSaved.includes(id)?learnSaved.filter(x=>x!==id):[...learnSaved,id];storeL('saved',learnSaved);renderScreen();if(learnModal?.kind==='asset')learnShow()}
@@ -2331,7 +2331,7 @@ function learnShow(){
   }
 }
     function learnGuide(url){if(url.startsWith('https://www.investor.gov/'))window.open(url,'_blank','noopener,noreferrer')}
-  function learnConfirm(id){if(!learnAssets.some(x=>x.id===id))return;learnOrders.push({id,amount:learnAmount,date:new Date().toISOString()});storeL('orders',learnOrders);learnModal={kind:'success'};renderScreen();learnShow()}
+  function learnConfirm(id){if(!learnAssets.some(x=>x.id===id))return;learnOrders.push({id,amount:learnAmount,date:new Date().toISOString()});storeL('orders',learnOrders);learnModal={kind:learnOrders.length===3?'upgrade':'success'};renderScreen();learnShow()}
   function learnUpgrade(){learnModal={kind:'upgrade'};learnShow()}
 
 </script>
