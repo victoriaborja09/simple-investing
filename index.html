@@ -1471,9 +1471,9 @@
     let liveMarket = null;
     let marketLoadError = '';
     let marketLoadBusy = false;
-    let marketFeedUrl = (new URLSearchParams(location.search).get('marketFeed') ||
-      (()=>{try{return localStorage.getItem('simple_investing_market_feed_url')||'';}catch{return '';}})() ||
-      'https://simple-investing-market-data.victoriaborja09.workers.dev/portfolio-feed').trim();
+    // The public prototype always uses its configured Cloudflare feed.
+    // Twelve Data credentials stay securely inside the Worker, never here.
+    const marketFeedUrl = 'https://simple-investing-market-data.victoriaborja09.workers.dev/portfolio-feed';
     // The server endpoint must supply dividend-reinvested total-return indexes.
     // Example payload: {asOf:"2026-10-13T16:00:00-04:00",source:"Provider name",
     // daily:[{date:"2026-04-30",SPYM:100,VXUS:100,SGOV:100},...],
@@ -1653,8 +1653,7 @@
         <div class="account-tile"><small>${t('accountGrowth')}</small><strong class="${gain>=0?'positive':''}">${gain>=0?'+':''}${money(gain)}</strong></div></div>
         <div class="account-section"><strong>${t('investmentsTitle')}</strong><span>${t('holdingsInfo')}</span></div>
         <div class="asset-mini-grid">${assetTiles}</div>
-        <p class="account-market-status">${liveMarket?'Simulated purchases start May 1, 2026. Dividends reinvested.':'No live feed connected. These are historical demo figures, not current market prices.'}
-        <button type="button" onclick="openFeedSettings()">${liveMarket?'Market data settings':'Connect market data'}</button></p>
+        <p class="account-market-status">${liveMarket?'Simulated purchases start May 1, 2026. Dividends reinvested.':'Sample values only. Current market data is temporarily unavailable.'}</p>
       </div>`;
     }
     async function refreshMarketFeed(){
@@ -1669,27 +1668,6 @@
         if(screens[screenIndex]==='home'&&homeTab==='home')renderScreen();
       }catch(error){marketLoadError=String(error?.message||error);console.warn('Simple Investing feed:',marketLoadError);}
       finally{marketLoadBusy=false;}
-    }
-    function openFeedSettings(){
-      document.getElementById('feedSettings')?.remove();
-      const panel=document.createElement('div');panel.id='feedSettings';panel.className='feed-dialog';
-      panel.innerHTML=`<section class="feed-dialog-body" role="dialog" aria-modal="true"><h3>Connect market data</h3>
-      <p>This is a simulated account. Connect a read-only portfolio data endpoint to show actual market prices. Never paste a private provider API key into this public HTML.</p>
-      <label for="feedInput">Serverless market-data endpoint URL</label><input id="feedInput" type="url" placeholder="https://your-project.example/portfolio-feed" value="${marketFeedUrl.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"/>
-      <div class="feed-dialog-actions"><button type="button" class="cancel" onclick="closeFeedSettings()">Cancel</button><button type="button" class="confirm" onclick="saveFeedSettings()">Connect</button></div>
-      ${marketLoadError?`<p style="color:#c0524d">${marketLoadError}</p>`:''}</section>`;
-      document.querySelector('.screen').appendChild(panel);
-      panel.addEventListener('click',e=>{if(e.target===panel)closeFeedSettings()});
-    }
-    function closeFeedSettings(){document.getElementById('feedSettings')?.remove()}
-    function saveFeedSettings(){
-      const value=document.getElementById('feedInput')?.value.trim();
-      if(value && !/^https:\/\//i.test(value)){alert('Please enter an HTTPS endpoint.');return;}
-      marketFeedUrl=value||'';liveMarket=null;marketLoadError='';
-      try { if(marketFeedUrl)localStorage.setItem('simple_investing_market_feed_url',marketFeedUrl);
-            else localStorage.removeItem('simple_investing_market_feed_url'); } catch {}
-      closeFeedSettings();renderScreen();
-      refreshMarketFeed();
     }
     function renderHomeNav() {
       const labels=[['home','⌂','accountNavHome'],['portfolio','◉','accountNavPortfolio'],['learn','◔','accountNavLearn'],['you','⚙','accountNavYou']];
