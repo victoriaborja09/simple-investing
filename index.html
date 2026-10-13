@@ -728,10 +728,26 @@
     @keyframes breathe { 50% { transform:scale(1.06); } }
     @media(prefers-reduced-motion:reduce) { .loading-orbit:before,.loading-mark { animation:none!important; } }
     .holding-label {display:block;color:#6d8074;font-size:11px;font-weight:700;margin:8px 0 7px}
-    .holding-select-wrap {display:flex;align-items:center;gap:9px;border:1px solid #dae8dc;border-radius:15px;background:#fff;padding:0 11px;height:44px;margin-bottom:14px;box-shadow:0 4px 14px rgba(28,77,44,.04);position:relative}
-    .holding-select-wrap .asset-mini-dot {flex:0 0 9px;width:9px;height:9px;border-radius:50%;display:block}
-    .holding-select-wrap select {flex:1;min-width:0;height:100%;font-family:inherit;font-size:12px;font-weight:600;color:#172b21;border:0;outline:none;background:transparent;appearance:none;cursor:pointer}
-    .holding-arrow {pointer-events:none;color:#739385;font-size:17px}
+    .holding-dropdown {width:100%;margin:0 0 13px}
+    .holding-select-trigger {display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:8px 13px;background:#fff;border:1px solid #d8e9dc;border-radius:16px;color:#15291f;box-shadow:0 4px 16px rgba(24,80,45,.06);font-family:inherit;text-align:left;cursor:pointer;transition:border-color .18s,background-color .18s}
+    .holding-select-trigger:focus-visible,.holding-menu-option:focus-visible {outline:2px solid #25bc70;outline-offset:2px}
+    .holding-dropdown.open .holding-select-trigger {border-color:#55d694;background:#f6fff9;border-bottom-left-radius:13px;border-bottom-right-radius:13px}
+    .holding-select-trigger .asset-mini-dot,.holding-menu-option .asset-mini-dot {flex:none;display:inline-block;width:10px;height:10px;border-radius:999px}
+    .holding-picker-copy {display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;flex:1}
+    .holding-picker-copy strong {font-size:12px;font-weight:800;line-height:1.15}
+    .holding-picker-copy small {font-size:11px;color:#697d6f;line-height:1.2;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .holding-picker-weight {font-size:11px;font-weight:800;color:#338a61;white-space:nowrap;margin-right:2px}
+    .holding-arrow {display:inline-flex;align-items:center;justify-content:center;color:#5f866f;font-size:16px;transition:transform .18s}
+    .holding-dropdown.open .holding-arrow {transform:rotate(180deg)}
+    .holding-dropdown-menu {margin:6px 0 0;padding:5px;background:#fff;border:1px solid #dcebe1;border-radius:16px;box-shadow:0 8px 22px rgba(22,69,42,.08);animation:holdingDropIn .18s ease-out both}
+    @keyframes holdingDropIn {from {opacity:.2;transform:translateY(-5px)} to {opacity:1;transform:translateY(0)}}
+    .holding-menu-option {display:flex;align-items:center;width:100%;gap:11px;min-height:44px;border:0;background:transparent;padding:7px 10px;border-radius:11px;text-align:left;cursor:pointer;font-family:inherit;color:#15291f}
+    .holding-menu-option + .holding-menu-option {margin-top:2px}
+    .holding-menu-option:hover {background:#f3faf5}
+    .holding-menu-option.selected {background:#e9f8ee}
+    .holding-menu-option .holding-picker-copy strong {font-size:12px}
+    .holding-menu-option .holding-picker-copy small {font-size:10px}
+    .holding-menu-check {color:#12b86d;font-size:14px;font-weight:800;flex:none;width:12px;text-align:center}
     .holding-explanation {font-size:11px;line-height:1.46;color:#647668;margin:12px 1px 4px}
     .account-view { animation:homeAppear .45s ease-out both; }
     @keyframes homeAppear { from {opacity:0;transform:translateY(8px);} to {opacity:1;transform:translateY(0);} }
@@ -1233,6 +1249,7 @@
     let homeTab = 'home';
     let homeSelectedAsset = null;
     let portfolioTicker = 'SPYM';
+    let portfolioMenuOpen = false;
     let loadingTick = null;
     let loadingToken = 0;
 
@@ -1259,6 +1276,9 @@
     const accountHistory = [{"date":"2025-09","SPYM":0.0353,"VXUS":0.0344,"SGOV":0.0032},{"date":"2025-10","SPYM":0.0242,"VXUS":0.0159,"SGOV":0.0037},{"date":"2025-11","SPYM":0.0019,"VXUS":0.0040999999999999995,"SGOV":0.0029},{"date":"2025-12","SPYM":0.0008,"VXUS":0.025099999999999997,"SGOV":0.0034000000000000002},{"date":"2026-01","SPYM":0.0147,"VXUS":0.0559,"SGOV":0.0029},{"date":"2026-02","SPYM":-0.0079,"VXUS":0.0521,"SGOV":0.0028000000000000004},{"date":"2026-03","SPYM":-0.0499,"VXUS":-0.079,"SGOV":0.0029},{"date":"2026-04","SPYM":0.1048,"VXUS":0.07719999999999999,"SGOV":0.003},{"date":"2026-05","SPYM":0.053099999999999994,"VXUS":0.0361,"SGOV":0.0029},{"date":"2026-06","SPYM":-0.0104,"VXUS":-0.0022,"SGOV":0.003},{"date":"2026-07","SPYM":0.0002,"VXUS":-0.0105,"SGOV":0.0034000000000000002},{"date":"2026-08","SPYM":0.0271,"VXUS":0.0323,"SGOV":0.0028000000000000004},{"date":"2026-09","SPYM":-0.0031,"VXUS":-0.0252,"SGOV":0.0029}];
 
 
+    const uiStrings={"en":{"breakdown":"Portfolio breakdown","choose":"Choose an investment","chooseETF":"Choose an ETF","target":"target allocation","market":"Market data","delayed":"Quotes delayed","demo":"Demo only","sample":"Sample through Sep 2026","quotes":"quotes through","quoteMissing":"quote date unavailable","unavailable":"Period performance unavailable","range1d":"past day","range1w":"past week","range1m":"past month","range3m":"past 3 months","rangeytd":"year to date","range1y":"past year","rangeall":"since starting","contributed":"Contributed","growth":"Investment growth","simulated":"Simulated","monthlyDeposits":"monthly deposits.","pending":"currently uninvested cash.","feedNote":"ETF prices reflect available market data.","sampleNote":"Historical sample, not live prices.","chartMissing":"History unavailable","chartNoPrices":"Historical market prices for this period are not available.","chartLabel":"holding value for the selected period","chartInvested":"contributed","purposeSPYM":"U.S. large-company stocks, including companies in the S&P 500.","purposeVXUS":"Companies in developed and emerging international markets.","purposeSGOV":"Short-term U.S. Treasury bills, designed to limit interest-rate risk.","chartGroup":"Holding history period","homeGroup":"Portfolio history period","marketUnavailable":"market history unavailable","noFeed":"Current market prices are unavailable.","noIntra":"Intraday prices are unavailable for this period.","notes":"Portfolio values are simulated, not a real brokerage account.","rangeYTD":"YTD","rangeAll":"All","fundYTD":"YTD","fundReturn":"Fund return","fundShare":"Portfolio share","fundValue":"Approx. value","asOf":"As of","holdingDetails":"Holding details"},"es":{"breakdown":"Detalle de la cartera","choose":"Elige una inversión","chooseETF":"Elegir un ETF","target":"asignación objetivo","market":"Datos de mercado","delayed":"Cotizaciones retrasadas","demo":"Solo demostración","sample":"Datos de muestra hasta sep. de 2026","quotes":"cotizaciones hasta el","quoteMissing":"fecha de cotización no disponible","unavailable":"Rentabilidad no disponible","range1d":"último día","range1w":"última semana","range1m":"último mes","range3m":"últimos 3 meses","rangeytd":"en lo que va del año","range1y":"último año","rangeall":"desde el inicio","contributed":"Aportado","growth":"Ganancia de inversión","simulated":"Aportaciones simuladas de","monthlyDeposits":"al mes.","pending":"en efectivo pendiente de invertir.","feedNote":"Los precios reflejan los datos de mercado disponibles.","sampleNote":"Datos históricos de muestra, no cotizaciones actuales.","chartMissing":"Historial no disponible","chartNoPrices":"No hay cotizaciones históricas para este período.","chartLabel":"valor de la inversión en el período seleccionado","chartInvested":"aportado","purposeSPYM":"Acciones de grandes empresas de EE. UU., incluidas las del S&P 500.","purposeVXUS":"Empresas de mercados desarrollados y emergentes fuera de EE. UU.","purposeSGOV":"Letras del Tesoro estadounidense a corto plazo, diseñadas para limitar el riesgo de tipos de interés.","chartGroup":"Período de la inversión","homeGroup":"Período de la cartera","marketUnavailable":"historial de mercado no disponible","noFeed":"No hay cotizaciones actuales disponibles.","noIntra":"No hay cotizaciones intradía para este período.","notes":"Los valores son simulados; no es una cuenta de inversión real.","rangeYTD":"Año","rangeAll":"Todo","fundYTD":"Año","fundReturn":"Rentabilidad del fondo","fundShare":"Parte de la cartera","fundValue":"Valor aproximado","asOf":"A fecha de","holdingDetails":"Detalles de la inversión"},"it":{"breakdown":"Dettaglio del portafoglio","choose":"Scegli un investimento","chooseETF":"Scegli un ETF","target":"allocazione obiettivo","market":"Dati di mercato","delayed":"Quotazioni ritardate","demo":"Solo dimostrazione","sample":"Dati di esempio fino a set. 2026","quotes":"quotazioni aggiornate al","quoteMissing":"data delle quotazioni non disponibile","unavailable":"Rendimento non disponibile","range1d":"ultimo giorno","range1w":"ultima settimana","range1m":"ultimo mese","range3m":"ultimi 3 mesi","rangeytd":"da inizio anno","range1y":"ultimo anno","rangeall":"dall'inizio","contributed":"Versato","growth":"Crescita dell'investimento","simulated":"Versamenti simulati di","monthlyDeposits":"al mese.","pending":"in contanti ancora da investire.","feedNote":"I prezzi riflettono i dati di mercato disponibili.","sampleNote":"Esempio storico, non quotazioni in tempo reale.","chartMissing":"Storico non disponibile","chartNoPrices":"Non sono disponibili prezzi storici per questo periodo.","chartLabel":"valore dell'investimento nel periodo selezionato","chartInvested":"versato","purposeSPYM":"Azioni di grandi società statunitensi, incluse quelle dell'S&P 500.","purposeVXUS":"Società dei mercati sviluppati ed emergenti fuori dagli Stati Uniti.","purposeSGOV":"Buoni del Tesoro USA a breve termine, con rischio di tasso limitato.","chartGroup":"Periodo dell'investimento","homeGroup":"Periodo del portafoglio","marketUnavailable":"storico di mercato non disponibile","noFeed":"Prezzi di mercato attuali non disponibili.","noIntra":"Prezzi intraday non disponibili per questo periodo.","notes":"I valori sono simulati; non si tratta di un conto di investimento reale.","rangeYTD":"Anno","rangeAll":"Tutto","fundYTD":"Anno","fundReturn":"Rendimento del fondo","fundShare":"Quota del portafoglio","fundValue":"Valore stimato","asOf":"Al","holdingDetails":"Dettagli dell'investimento"},"fr":{"breakdown":"Détail du portefeuille","choose":"Choisir un placement","chooseETF":"Choisir un ETF","target":"allocation cible","market":"Données de marché","delayed":"Cours différés","demo":"Démo uniquement","sample":"Données d'exemple jusqu'à sept. 2026","quotes":"cours disponibles au","quoteMissing":"date des cours indisponible","unavailable":"Performance indisponible","range1d":"dernier jour","range1w":"dernière semaine","range1m":"dernier mois","range3m":"3 derniers mois","rangeytd":"depuis janvier","range1y":"dernière année","rangeall":"depuis le début","contributed":"Versements","growth":"Gain du placement","simulated":"Versements simulés de","monthlyDeposits":"par mois.","pending":"en espèces restant à investir.","feedNote":"Les prix reflètent les données de marché disponibles.","sampleNote":"Exemple historique, pas de cours en temps réel.","chartMissing":"Historique indisponible","chartNoPrices":"Les prix historiques sont indisponibles pour cette période.","chartLabel":"valeur du placement sur la période sélectionnée","chartInvested":"versé","purposeSPYM":"Actions de grandes entreprises américaines, dont celles du S&P 500.","purposeVXUS":"Entreprises de marchés développés et émergents hors des États-Unis.","purposeSGOV":"Bons du Trésor américain à court terme, limitant le risque de taux.","chartGroup":"Période du placement","homeGroup":"Période du portefeuille","marketUnavailable":"historique de marché indisponible","noFeed":"Cours de marché actuels indisponibles.","noIntra":"Cours intrajournaliers indisponibles pour cette période.","notes":"Ces valeurs sont simulées et ne représentent pas un vrai compte de courtage.","rangeYTD":"Année","rangeAll":"Tout","fundYTD":"Année","fundReturn":"Performance du fonds","fundShare":"Part du portefeuille","fundValue":"Valeur estimée","asOf":"Au","holdingDetails":"Détails du placement"}};
+    function ui(key){return uiStrings[currentLang]?.[key]??uiStrings.en[key]??key;}
+    function rangeChoices(){return [['1d','1D'],['1w',currentLang==='en'?'1W':currentLang==='es'?'1S':currentLang==='it'?'1S':'1S'],['1m','1M'],['3m','3M'],['ytd',ui('rangeYTD')],['1y',currentLang==='en'?'1Y':currentLang==='es'?'1A':currentLang==='it'?'1A':'1A'],['all',ui('rangeAll')]];}
     function t(key) {
       return translations[currentLang][key] ?? translations.en[key] ?? key;
     }
@@ -1838,7 +1858,19 @@
       const value=last?.balance||0;
       const change=gain===null?'Period performance unavailable':
         (gain>=0?'+':'−')+moneyChange(Math.abs(gain))+' ('+pct(performance.percent)+') · '+rangeName(homeRange);
-      const opts=portfolioAssets.map(a=>'<option value="'+a.ticker+'" '+(asset.ticker===a.ticker?'selected':'')+'>'+a.ticker+'  ·  '+t(a.nameKey)+' ('+a.pct+'%)</option>').join('');
+      const options=portfolioAssets.map(a=>
+        '<button type="button" class="holding-menu-option '+(asset.ticker===a.ticker?'selected':'')+'" role="option" aria-selected="'+(asset.ticker===a.ticker)+'" onclick="setPortfolioTicker(\''+a.ticker+'\')">'+
+        '<i aria-hidden="true" class="asset-mini-dot" style="background:'+a.color+'"></i>'+
+        '<span class="holding-picker-copy"><strong>'+a.ticker+'</strong><small>'+t(a.nameKey)+'</small></span>'+
+        '<span class="holding-picker-weight">'+a.pct+'%</span><span class="holding-menu-check">'+(asset.ticker===a.ticker?'✓':'')+'</span></button>'
+      ).join('');
+      const picker='<div class="holding-dropdown '+(portfolioMenuOpen?'open':'')+'">'+
+        '<button type="button" class="holding-select-trigger" id="portfolioTickerButton" aria-label="'+ui('chooseETF')+'" aria-expanded="'+portfolioMenuOpen+'" aria-haspopup="listbox" aria-controls="portfolioTickerOptions" onclick="togglePortfolioMenu()" onkeydown="portfolioPickerKeydown(event)">'+
+        '<i aria-hidden="true" class="asset-mini-dot" style="background:'+asset.color+'"></i>'+
+        '<span class="holding-picker-copy"><strong>'+asset.ticker+'</strong><small>'+t(asset.nameKey)+'</small></span>'+
+        '<span class="holding-picker-weight">'+asset.pct+'%</span><span class="holding-arrow" aria-hidden="true">⌄</span></button>'+
+        (portfolioMenuOpen?'<div class="holding-dropdown-menu" id="portfolioTickerOptions" role="listbox" aria-label="'+ui('chooseETF')+'">'+options+'</div>':'')+
+        '</div>';
       const chart=portfolioAssetChart(shown,asset.ticker);
       const dates=shown?.length>=2?
         '<span>'+homeAxisDate(shown[0].date)+'</span><span>'+homeAxisDate(shown.at(-1).date)+'</span>':
@@ -1852,7 +1884,7 @@
       return '<div class="account-view holding-view">'+
         '<div class="account-head"><strong>Portfolio breakdown</strong><span class="demo-pill">'+status+'</span></div>'+
         '<label class="holding-label" for="portfolioTickerSelect">Choose an investment</label>'+
-        '<div class="holding-select-wrap"><i class="asset-mini-dot" style="background:'+asset.color+'"></i><select id="portfolioTickerSelect" aria-label="Choose an ETF" onchange="setPortfolioTicker(this.value)">'+opts+'</select><span class="holding-arrow">⌄</span></div>'+
+        picker+
         '<div class="account-amount">'+moneyChange(value)+'</div>'+
         '<div class="account-gain '+(gain!==null&&gain<0?'negative':'')+'">'+change+'</div>'+
         '<div class="account-sub">'+homeStatusLabel()+' · '+asset.pct+'% target allocation</div>'+
