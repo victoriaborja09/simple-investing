@@ -727,6 +727,12 @@
     @keyframes orbit { to { transform:rotate(360deg); } }
     @keyframes breathe { 50% { transform:scale(1.06); } }
     @media(prefers-reduced-motion:reduce) { .loading-orbit:before,.loading-mark { animation:none!important; } }
+    .holding-label {display:block;color:#6d8074;font-size:11px;font-weight:700;margin:8px 0 7px}
+    .holding-select-wrap {display:flex;align-items:center;gap:9px;border:1px solid #dae8dc;border-radius:15px;background:#fff;padding:0 11px;height:44px;margin-bottom:14px;box-shadow:0 4px 14px rgba(28,77,44,.04);position:relative}
+    .holding-select-wrap .asset-mini-dot {flex:0 0 9px;width:9px;height:9px;border-radius:50%;display:block}
+    .holding-select-wrap select {flex:1;min-width:0;height:100%;font:600 12px inherit;color:#172b21;border:0;outline:none;background:transparent;appearance:none;cursor:pointer}
+    .holding-arrow {pointer-events:none;color:#739385;font-size:17px}
+    .holding-explanation {font-size:11px;line-height:1.46;color:#647668;margin:12px 1px 4px}
     .account-view { animation:homeAppear .45s ease-out both; }
     @keyframes homeAppear { from {opacity:0;transform:translateY(8px);} to {opacity:1;transform:translateY(0);} }
     @media(prefers-reduced-motion:reduce) { .account-view { animation:none; } }
@@ -1226,6 +1232,7 @@
     let homeRange = 'all';
     let homeTab = 'home';
     let homeSelectedAsset = null;
+    let portfolioTicker = 'SPYM';
     let loadingTick = null;
     let loadingToken = 0;
 
@@ -1564,7 +1571,7 @@
           const value=(state.pendingCash||0)+Object.entries(state.units).reduce(
             (sum,[ticker,units])=>sum+units*Number(r[ticker]),0);
           return {date:r.time,balance:value,deposits:state.deposits,
-            growth:value-state.deposits,units:{...state.units}};
+            growth:value-state.deposits,units:{...state.units},indexes:r};
         }).filter(Boolean).sort((a,b)=>a.date.localeCompare(b.date));
     }
     function accountWindow(history) {
@@ -1727,7 +1734,7 @@
         const json=await response.json();
         if(!json.asOf||!Array.isArray(json.daily)||json.daily.length<2 || !['SPYM','VXUS','SGOV'].every(t=>json.daily.some(x=>Number(x[t])>0)))throw Error('Market feed did not include valid portfolio histories');
         liveMarket=json;
-        if(screens[screenIndex]==='home'&&homeTab==='home')renderScreen();
+        if(screens[screenIndex]==='home'&&(homeTab==='home'||homeTab==='portfolio'))renderScreen();
       }catch(error){marketLoadError=String(error?.message||error);console.warn('Simple Investing feed:',marketLoadError);}
       finally{marketLoadBusy=false;}
     }
@@ -1737,9 +1744,132 @@
         ${labels.map(([id,ico,key])=>`<button class="home-nav-item ${homeTab===id?'active':''}" type="button" onclick="openHomeTab('${id}')" aria-current="${homeTab===id?'page':'false'}"><span>${ico}</span>${t(key)}</button>`).join('')}
       </nav>`;
     }
+
+    // Convert the simulated portfolio's owned units into a history for one ETF.
+    // This is intentionally share-based, not target weight times account balance.
+    function holdingPath(ticker,aggregateHistory=accountPath()) {
+      const share=ASSET_WEIGHTS[ticker];
+      if(!share)return [];
+      if(liveMarket?.daily?.length) {
+        return aggregateHistory.map(row=>{
+          const price=Number(row.indexes?.[ticker])||0;
+          const owned=Number(row.units?.[ticker])||0;
+          const amount=owned*price;
+          const deposits=Math.max(0,(row.deposits-(row.pendingCash||0))*share);
+          return {date:row.date,balance:amount,deposits,
+            growth:amount-deposits,units:row.units,indexes:row.indexes};
+        });
+      }
+      // Historical fallback uses monthly observations, never fabricated daily prices.
+      const rows=accountHistory.filter(r=>r.date>='2026-05'&&r.date<='2026-09');
+      let amount=0,deposits=0;
+      const history=[{date:'2026-04-30',balance:0,deposits:0,growth:0}];
+      for(const row of rows){
+        const buy=selectedAmount*share;
+        deposits+=buy;
+        amount=(amount+buy)*(1+Number(row[ticker]));
+        history.push({date:row.date+'-28',balance:amount,deposits,
+          growth:amount-deposits});
+      }
+      return history;
+    }
+    function holdingWindow(ticker,aggregateHistory){
+      // Reuse the home window boundaries so all tabs use the exact same dates.
+      const range=accountWindow(aggregateHistory);
+      if(!range || range.length<2)return null;
+      const share=ASSET_WEIGHTS[ticker];
+      if(!liveMarket){
+        const own=holdingPath(ticker,aggregateHistory);
+        const dates=new Set(range.map(p=>p.date));
+        return own.filter(p=>dates.has(p.date));
+      }
+      return range.map(p=>{
+        const amount=(Number(p.units?.[ticker])||0)*(Number(p.indexes?.[ticker])||0);
+        const deposits=Math.max(0,(p.deposits-(p.pendingCash||0))*share);
+        return {date:p.date,balance:amount,deposits,growth:amount-deposits};
+      });
+    }
+    function marketLastDate() {
+      if(!liveMarket)return '';
+      const daily=liveMarket.daily?.at(-1)?.date||'';
+      const intra=liveMarket.intraday?.at(-1)?.time?.slice(0,10)||'';
+      return daily>intra?daily:intra;
+    }
+    function marketQuotesDelayed(){
+      if(!liveMarket)return false;
+      const last=marketLastDate(),asOf=dateInNY(liveMarket.asOf);
+      if(!last||!asOf)return true;
+      return (Date.parse(asOf+'T12:00:00Z')-Date.parse(last+'T12:00:00Z'))>5*86400000;
+    }
+    function portfolioAssetChart(points,ticker){
+      if(!points||points.length<2)return '<div class="account-chart-unavailable"><strong>History unavailable</strong><span>Historical market prices for this period are not available.</span></div>';
+      const width=330,height=206,left=12,top=16,right=7,bottom=15;
+      const values=points.map(p=>p.balance),rawMin=Math.min(...values),rawMax=Math.max(...values);
+      const spread=Math.max(rawMax-rawMin,1);
+      const min=Math.max(0,rawMin-spread*.15);
+      const max=Math.max(rawMax+spread*.15,min+1);
+      const xy=points.map((p,i)=>({
+        x:left+i*(width-left-right)/Math.max(1,points.length-1),
+        y:top+(1-(p.balance-min)/(max-min))*(height-top-bottom),...p
+      }));
+      const lines=xy.map(p=>p.x.toFixed(2)+','+p.y.toFixed(2)).join(' ');
+      const area=xy[0].x+','+(height-bottom)+' '+lines+' '+xy.at(-1).x+','+(height-bottom);
+      const asset=portfolioAssets.find(a=>a.ticker===ticker);
+      const negative=periodPerformance(points)?.gain<0;
+      const color=negative?'#dd5555':asset.color;
+      const fill=negative?'#fde8e8':ticker==='SPYM'?'#e4edff':ticker==='VXUS'?'#e3f5ff':'#e3f8ee';
+      const grid=[.1,.5,.9].map(f=>{
+        const y=top+f*(height-top-bottom);
+        return '<line x1="'+left+'" x2="'+(width-right)+'" y1="'+y+'" y2="'+y+'" stroke="#e3f0e8" stroke-width="1"/>';
+      }).join('');
+      const tips=xy.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="6" fill="transparent"><title>'+p.date+': '+moneyChange(p.balance)+' invested '+moneyChange(p.deposits)+'</title></circle>').join('');
+      return '<svg viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" role="img" aria-label="'+ticker+' holding value for the selected period"><defs><linearGradient id="holdingFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+fill+'" stop-opacity=".90"/><stop offset="100%" stop-color="'+fill+'" stop-opacity=".05"/></linearGradient></defs>'+grid+'<polygon points="'+area+'" fill="url(#holdingFill)"/><polyline points="'+lines+'" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+xy.at(-1).x+'" cy="'+xy.at(-1).y+'" r="4.5" fill="'+color+'" stroke="#fff" stroke-width="2"/>'+tips+'</svg>';
+    }
+    function renderHoldingDashboard(){
+      const asset=portfolioAssets.find(a=>a.ticker===portfolioTicker)||portfolioAssets[0];
+      const aggregate=accountPath();
+      const ownHistory=holdingPath(asset.ticker,aggregate);
+      const last=ownHistory.at(-1);
+      const shown=holdingWindow(asset.ticker,aggregate);
+      const performance=periodPerformance(shown);
+      const gain=performance?.gain??null;
+      const value=last?.balance||0;
+      const change=gain===null?'Period performance unavailable':
+        (gain>=0?'+':'−')+moneyChange(Math.abs(gain))+' ('+pct(performance.percent)+') · '+rangeName(homeRange);
+      const opts=portfolioAssets.map(a=>'<option value="'+a.ticker+'" '+(asset.ticker===a.ticker?'selected':'')+'>'+a.ticker+'  ·  '+t(a.nameKey)+' ('+a.pct+'%)</option>').join('');
+      const chart=portfolioAssetChart(shown,asset.ticker);
+      const dates=shown?.length>=2?
+        '<span>'+homeAxisDate(shown[0].date)+'</span><span>'+homeAxisDate(shown.at(-1).date)+'</span>':
+        '<span>'+homeStatusLabel()+'</span><span></span>';
+      const delayed=marketQuotesDelayed();
+      const status=liveMarket?(delayed?'Quotes delayed':'Market data'):'Demo only';
+      const deposit=performance?moneyChange(performance.contributed):'—';
+      const profit=gain===null?'—':(gain>=0?'+':'−')+moneyChange(Math.abs(gain));
+      return '<div class="account-view holding-view">'+
+        '<div class="account-head"><strong>Portfolio breakdown</strong><span class="demo-pill">'+status+'</span></div>'+
+        '<label class="holding-label" for="portfolioTickerSelect">Choose an investment</label>'+
+        '<div class="holding-select-wrap"><i class="asset-mini-dot" style="background:'+asset.color+'"></i><select id="portfolioTickerSelect" aria-label="Choose an ETF" onchange="setPortfolioTicker(this.value)">'+opts+'</select><span class="holding-arrow">⌄</span></div>'+
+        '<div class="account-amount">'+moneyChange(value)+'</div>'+
+        '<div class="account-gain '+(gain!==null&&gain<0?'negative':'')+'">'+change+'</div>'+
+        '<div class="account-sub">'+homeStatusLabel()+' · '+asset.pct+'% target allocation</div>'+
+        '<div class="account-range" role="group" aria-label="Holding history period">'+
+        [['1d','1D'],['1w','1W'],['1m','1M'],['3m','3M'],['ytd','YTD'],['1y','1Y'],['all','All']].map(([id,label])=>'<button class="'+(homeRange===id?'active':'')+'" onclick="setHomeRange(\''+id+'\')" aria-pressed="'+(homeRange===id)+'">'+label+'</button>').join('')+
+        '</div><div class="account-chart">'+chart+'</div><div class="account-period">'+dates+'</div>'+
+        '<div class="account-tiles"><div class="account-tile"><small>Contributed · '+homeRange.toUpperCase()+'</small><strong>'+deposit+'</strong></div>'+
+        '<div class="account-tile"><small>Investment growth · '+homeRange.toUpperCase()+'</small><strong class="'+(gain!==null&&gain>=0?'positive':gain!==null?'negative':'')+'">'+profit+'</strong></div></div>'+
+        '<p class="holding-explanation">'+t(asset.detailKey)+'</p>'+
+        '<p class="account-market-status">Based on simulated '+money(selectedAmount)+' monthly deposits, allocated '+asset.pct+'% to '+asset.ticker+'. '+(liveMarket?'ETF returns use connected historical market data.':'Historical sample, not live prices.')+'</p>'+
+        '</div>';
+    }
+    function setPortfolioTicker(ticker){
+      if(!ASSET_WEIGHTS[ticker])return;
+      portfolioTicker=ticker;
+      if(screens[screenIndex]==='home'&&homeTab==='portfolio')renderScreen();
+    }
+
     function renderHomeTab() {
       if(homeTab==='home') return renderHomeDashboard();
-      if(homeTab==='portfolio') return `<div class="account-tab-content"><h2>${t('portTitle')}</h2><p class="subhead">${t('portSub')}</p><div id="portfolioDiagram">${renderPortfolioDiagram()}</div><p class="portfolio-hint">${t('donutHint')}</p><div id="portfolioDetail" class="allocation-detail">${renderPortfolioDetail()}</div></div>`;
+      if(homeTab==='portfolio') return renderHoldingDashboard();
       const k=homeTab==='learn'?'accountNavLearn':'accountNavYou';
       return `<div class="account-placeholder"><div class="bigicon">◌</div><h2>${t(k)}</h2><p>${t('placeholderTitle')}</p></div>`;
     }
