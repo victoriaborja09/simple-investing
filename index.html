@@ -1821,7 +1821,7 @@
       return (Date.parse(asOf+'T12:00:00Z')-Date.parse(last+'T12:00:00Z'))>5*86400000;
     }
     function portfolioAssetChart(points,ticker){
-      if(!points||points.length<2)return '<div class="account-chart-unavailable"><strong>History unavailable</strong><span>Historical market prices for this period are not available.</span></div>';
+      if(!points||points.length<2)return '<div class="account-chart-unavailable"><strong>'+ui('chartMissing')+'</strong><span>'+ui('chartNoPrices')+'</span></div>';
       const width=330,height=206,left=12,top=16,right=7,bottom=15;
       const values=points.map(p=>p.balance),rawMin=Math.min(...values),rawMax=Math.max(...values);
       const spread=Math.max(rawMax-rawMin,1);
@@ -1841,8 +1841,8 @@
         const y=top+f*(height-top-bottom);
         return '<line x1="'+left+'" x2="'+(width-right)+'" y1="'+y+'" y2="'+y+'" stroke="#e3f0e8" stroke-width="1"/>';
       }).join('');
-      const tips=xy.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="6" fill="transparent"><title>'+p.date+': '+moneyChange(p.balance)+' invested '+moneyChange(p.deposits)+'</title></circle>').join('');
-      return '<svg viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" role="img" aria-label="'+ticker+' holding value for the selected period"><defs><linearGradient id="holdingFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+fill+'" stop-opacity=".90"/><stop offset="100%" stop-color="'+fill+'" stop-opacity=".05"/></linearGradient></defs>'+grid+'<polygon points="'+area+'" fill="url(#holdingFill)"/><polyline points="'+lines+'" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+xy.at(-1).x+'" cy="'+xy.at(-1).y+'" r="4.5" fill="'+color+'" stroke="#fff" stroke-width="2"/>'+tips+'</svg>';
+      const tips=xy.map(p=>'<circle cx="'+p.x+'" cy="'+p.y+'" r="6" fill="transparent"><title>'+p.date+': '+moneyChange(p.balance)+' '+ui('chartInvested')+' '+moneyChange(p.deposits)+'</title></circle>').join('');
+      return '<svg viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" role="img" aria-label="'+ticker+' '+ui('chartLabel')+'"><defs><linearGradient id="holdingFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+fill+'" stop-opacity=".90"/><stop offset="100%" stop-color="'+fill+'" stop-opacity=".05"/></linearGradient></defs>'+grid+'<polygon points="'+area+'" fill="url(#holdingFill)"/><polyline points="'+lines+'" fill="none" stroke="'+color+'" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+xy.at(-1).x+'" cy="'+xy.at(-1).y+'" r="4.5" fill="'+color+'" stroke="#fff" stroke-width="2"/>'+tips+'</svg>';
     }
     function renderHoldingDashboard(){
       const asset=portfolioAssets.find(a=>a.ticker===portfolioTicker)||portfolioAssets[0];
@@ -1853,7 +1853,7 @@
       const performance=periodPerformance(shown);
       const gain=performance?.gain??null;
       const value=last?.balance||0;
-      const change=gain===null?'Period performance unavailable':
+      const change=gain===null?ui('unavailable'):
         (gain>=0?'+':'−')+moneyChange(Math.abs(gain))+' ('+pct(performance.percent)+') · '+rangeName(homeRange);
       const options=portfolioAssets.map(a=>
         '<button type="button" class="holding-menu-option '+(asset.ticker===a.ticker?'selected':'')+'" role="option" aria-selected="'+(asset.ticker===a.ticker)+'" onclick="setPortfolioTicker(\''+a.ticker+'\')">'+
@@ -1874,24 +1874,24 @@
         '<span>'+homeStatusLabel()+'</span><span></span>';
       const delayed=marketQuotesDelayed();
       const pending=aggregate.at(-1)?.pendingCash||0;
-      const purpose={SPYM:'U.S. large-company stocks, including the S&P 500.',VXUS:'Companies in developed and emerging international markets.',SGOV:'Short-term U.S. Treasury bills, designed to limit interest-rate risk.'}[asset.ticker];
-      const status=liveMarket?(delayed?'Quotes delayed':'Market data'):'Demo only';
+      const purpose=ui('purpose'+asset.ticker);
+      const status=liveMarket?(delayed?ui('delayed'):ui('market')):ui('demo');
       const deposit=performance?moneyChange(performance.contributed):'—';
       const profit=gain===null?'—':(gain>=0?'+':'−')+moneyChange(Math.abs(gain));
       return '<div class="account-view holding-view">'+
-        '<div class="account-head"><strong>Portfolio breakdown</strong><span class="demo-pill">'+status+'</span></div>'+
-        '<label class="holding-label" for="portfolioTickerSelect">Choose an investment</label>'+
+        '<div class="account-head"><strong>'+ui('breakdown')+'</strong><span class="demo-pill">'+status+'</span></div>'+
+        '<label class="holding-label" id="portfolioPickerLabel">'+ui('choose')+'</label>'+
         picker+
         '<div class="account-amount">'+moneyChange(value)+'</div>'+
         '<div class="account-gain '+(gain!==null&&gain<0?'negative':'')+'">'+change+'</div>'+
-        '<div class="account-sub">'+homeStatusLabel()+' · '+asset.pct+'% target allocation</div>'+
-        '<div class="account-range" role="group" aria-label="Holding history period">'+
-        [['1d','1D'],['1w','1W'],['1m','1M'],['3m','3M'],['ytd','YTD'],['1y','1Y'],['all','All']].map(([id,label])=>'<button class="'+(homeRange===id?'active':'')+'" onclick="setHomeRange(\''+id+'\')" aria-pressed="'+(homeRange===id)+'">'+label+'</button>').join('')+
+        '<div class="account-sub">'+homeStatusLabel()+' · '+asset.pct+'% '+ui('target')+'</div>'+
+        '<div class="account-range" role="group" aria-label="'+ui('chartGroup')+'">'+
+        rangeChoices().map(([id,label])=>'<button class="'+(homeRange===id?'active':'')+'" onclick="setHomeRange(\''+id+'\')" aria-pressed="'+(homeRange===id)+'">'+label+'</button>').join('')+
         '</div><div class="account-chart">'+chart+'</div><div class="account-period">'+dates+'</div>'+
-        '<div class="account-tiles"><div class="account-tile"><small>Contributed · '+homeRange.toUpperCase()+'</small><strong>'+deposit+'</strong></div>'+
-        '<div class="account-tile"><small>Investment growth · '+homeRange.toUpperCase()+'</small><strong class="'+(gain!==null&&gain>=0?'positive':gain!==null?'negative':'')+'">'+profit+'</strong></div></div>'+
+        '<div class="account-tiles"><div class="account-tile"><small>'+ui('contributed')+' · '+homeRange.toUpperCase()+'</small><strong>'+deposit+'</strong></div>'+
+        '<div class="account-tile"><small>'+ui('growth')+' · '+homeRange.toUpperCase()+'</small><strong class="'+(gain!==null&&gain>=0?'positive':gain!==null?'negative':'')+'">'+profit+'</strong></div></div>'+
         '<p class="holding-explanation">'+purpose+'</p>'+
-        '<p class="account-market-status">Simulated '+money(selectedAmount)+' monthly deposits. '+(pending?'A further '+moneyChange(pending)+' is temporarily uninvested cash. ':'')+(liveMarket?'ETF prices reflect available market data.':'Historical sample, not live prices.')+'</p>'+
+        '<p class="account-market-status">'+ui('simulated')+' '+money(selectedAmount)+' '+ui('monthlyDeposits')+' '+(pending?moneyChange(pending)+' '+ui('pending')+' ':'')+(liveMarket?ui('feedNote'):ui('sampleNote'))+'</p>'+
         '</div>';
     }
     function setPortfolioTicker(ticker){
