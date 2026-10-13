@@ -1,7 +1,7 @@
 
 /* Simple Investing Learn v2. Educational paper trading only. No real orders. */
 const L2={
- tab:'explore',view:'list',selected:null,period:'1M',search:'',remote:[],searchStatus:'',
+ tab:'explore',view:'list',selected:null,period:'1M',search:'',remote:[],searchStatus:'',metadata:(()=>{try{return JSON.parse(localStorage.getItem('simple_learn_metadata_v2'))||{}}catch{return {}}})(),
  marketCache:new Map(),quoteCache:new Map(),waiting:new Set(),error:{},paperRange:'All',
  tradeMode:'buy',tradeAmount:25,modal:null,refreshing:false,searchTimer:null,
  paper:(()=>{try{const v=JSON.parse(localStorage.getItem('simple_learn_paper_v2'));return v&&Number.isFinite(v.cash)&&Array.isArray(v.trades)?v:{cash:500,trades:[]};}catch{return {cash:500,trades:[]}}})()
@@ -25,7 +25,7 @@ const l2isLearn=()=>typeof homeTab!=='undefined'&&homeTab==='learn'&&screens[scr
 function l2draw(){if(l2isLearn())renderScreen();}
 function l2persist(){try{localStorage.setItem('simple_learn_paper_v2',JSON.stringify(L2.paper));}catch{}}
 function l2key(symbol,range){return symbol+'|'+range}
-function l2asset(symbol){return learnAssets.find(a=>a.id===symbol)||L2.remote.find(a=>a.id===symbol)||L2.paper.trades.find(t=>t.symbol===symbol)?.asset||{id:symbol,name:symbol,kind:'stock',sector:''}}
+function l2asset(symbol){return learnAssets.find(a=>a.id===symbol)||L2.remote.find(a=>a.id===symbol)||L2.metadata[symbol]||L2.paper.trades.find(t=>t.symbol===symbol)?.asset||{id:symbol,name:symbol,kind:'stock',sector:''}}
 function l2positions(){
  const out={};
  for(const t of L2.paper.trades){
@@ -106,6 +106,8 @@ function l2searchMarket(q){
   L2.remote=j.results.filter(x=>/^[A-Z0-9.]{1,12}$/.test(x.symbol||'')).map(x=>({
    id:x.symbol,name:x.name||x.symbol,kind:x.type==='etf'?'etf':'stock',sector:''
   })).slice(0,12);
+  for(const asset of L2.remote)L2.metadata[asset.id]=asset;
+  try{localStorage.setItem('simple_learn_metadata_v2',JSON.stringify(L2.metadata))}catch{}
   L2.searchStatus='ok';
  }).catch(()=>{if(L2.search.toLowerCase()===token)L2.searchStatus='offline';})
  .finally(()=>{if(L2.search.toLowerCase()===token)l2draw()});
