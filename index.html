@@ -1472,7 +1472,8 @@
     let marketLoadError = '';
     let marketLoadBusy = false;
     let marketFeedUrl = (new URLSearchParams(location.search).get('marketFeed') ||
-      (()=>{try{return localStorage.getItem('simple_investing_market_feed_url')||'';}catch{return '';}})()).trim();
+      (()=>{try{return localStorage.getItem('simple_investing_market_feed_url')||'';}catch{return '';}})() ||
+      'https://simple-investing-market-data.victoriaborja09.workers.dev/portfolio-feed').trim();
     // The server endpoint must supply dividend-reinvested total-return indexes.
     // Example payload: {asOf:"2026-10-13T16:00:00-04:00",source:"Provider name",
     // daily:[{date:"2026-04-30",SPYM:100,VXUS:100,SGOV:100},...],
