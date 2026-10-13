@@ -77,6 +77,7 @@ async function learnRoute(request,env,ctx,allow){
    const items=Array.isArray(results.data)?results.data:[];
    payload={results:items.filter(x=>validSymbol(x.symbol))
     .filter(x=>!x.country||/united states|usa/i.test(x.country))
+    .filter(x=>/^(Common Stock|ETF|American Depositary Receipt|REIT|Preferred Stock)$/i.test(x.instrument_type||''))
     .map(x=>({symbol:x.symbol.toUpperCase(),name:x.instrument_name||x.name||x.symbol,
       type:/etf|exchange traded/i.test(x.instrument_type||'')?'etf':'stock',
       exchange:x.exchange||''})).slice(0,15)};
