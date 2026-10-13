@@ -1506,9 +1506,13 @@
       return history;
     }
     function dateInNY(iso) {
-      if(!iso) return new Date().toLocaleDateString('en-CA',{timeZone:'America/New_York'});
-      if(/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
-      return new Date(iso).toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+      if(/^\d{4}-\d{2}-\d{2}$/.test(iso||''))return iso;
+      const d=iso?new Date(iso):new Date();
+      if(Number.isNaN(d.getTime()))return new Date().toISOString().slice(0,10);
+      const parts=new Intl.DateTimeFormat('en-US',
+        {timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);
+      const f=k=>parts.find(x=>x.type===k)?.value||'01';
+      return f('year')+'-'+f('month')+'-'+f('day');
     }
     function firstTradingDayInMonth(date,prevMonth) { return date.substring(0,7)!==prevMonth; }
     function liveAccountPath(records,asOf) {
@@ -1548,47 +1552,64 @@
       return history;
     }
     function liveIntradayPath(history){
-      if(!liveMarket?.intraday?.length || history.length<2)return [];
-      const prior=history[history.length-1], units=prior.units;
-      if(!units)return [];
-      return liveMarket.intraday.filter(r=>r.time && ['SPYM','VXUS','SGOV'].every(t=>Number(r[t])>0))
-        .map(r=>({date:r.time,balance:(prior.pendingCash||0)+Object.keys(units).reduce((a,t)=>a+units[t]*r[t],0),
-          deposits:prior.deposits,growth:0,units})).sort((a,b)=>a.date.localeCompare(b.date));
+      if(!liveMarket?.intraday?.length||history.length<2)return [];
+      const daily=history.filter(r=>r.date.length===10 && r.units);
+      return liveMarket.intraday.filter(r=>r.time&&['SPYM','VXUS','SGOV'].every(t=>Number(r[t])>0))
+        .map(r=>{
+          const day=r.time.slice(0,10);
+          // Simulated positions held on this day, not current positions
+          // retroactively applied to older quotes.
+          const state=daily.filter(p=>p.date<=day).at(-1);
+          if(!state)return null;
+          const value=(state.pendingCash||0)+Object.entries(state.units).reduce(
+            (sum,[ticker,units])=>sum+units*Number(r[ticker]),0);
+          return {date:r.time,balance:value,deposits:state.deposits,
+            growth:value-state.deposits,units:{...state.units}};
+        }).filter(Boolean).sort((a,b)=>a.date.localeCompare(b.date));
     }
     function accountWindow(history) {
+      if(!history || history.length<2)return null;
       if(!liveMarket){
-        // Daily or intraday market changes cannot be inferred from monthly returns.
         if(['1d','1w'].includes(homeRange))return null;
         if(homeRange==='1m')return history.slice(-2);
         if(homeRange==='3m')return history.slice(-4);
-        if(homeRange==='all'||homeRange==='1y'||homeRange==='ytd')return history;
+        return history;
       }
-      const asOf=dateInNY(liveMarket?.asOf || ''),
-        d=new Date(asOf+'T12:00:00Z');
-      let cutoff=null;
-      if(homeRange==='all') return history;
-      if(homeRange==='ytd') cutoff=asOf.slice(0,4)+'-01-01';
+      const daily=history.filter(p=>/^\d{4}-\d{2}-\d{2}$/.test(p.date));
+      const intraday=liveIntradayPath(history);
+      const lastDaily=daily.at(-1);
+      if(!lastDaily)return null;
+      const lastIntra=intraday.at(-1);
+      const endDay=(lastIntra&&lastIntra.date.slice(0,10)>lastDaily.date)
+        ?lastIntra.date.slice(0,10):lastDaily.date;
+      if(homeRange==='all')return history;
+      if(homeRange==='1d'){
+        const bars=intraday.filter(p=>p.date.slice(0,10)===endDay);
+        const previous=daily.filter(p=>p.date<endDay).at(-1);
+        if(bars.length>=2)return previous?[previous,...bars]:bars;
+        // Display daily close comparison when same-day bars are missing.
+        return daily.length>=2?daily.slice(-2):null;
+      }
+      const d=new Date(endDay+'T12:00:00Z');
+      let cutoff;
+      if(homeRange==='ytd')cutoff=endDay.slice(0,4)+'-01-01';
       else {
-        if(homeRange==='1d')d.setUTCDate(d.getUTCDate()-1);
         if(homeRange==='1w')d.setUTCDate(d.getUTCDate()-7);
         if(homeRange==='1m')d.setUTCMonth(d.getUTCMonth()-1);
         if(homeRange==='3m')d.setUTCMonth(d.getUTCMonth()-3);
         if(homeRange==='1y')d.setUTCFullYear(d.getUTCFullYear()-1);
         cutoff=d.toISOString().slice(0,10);
       }
-      // Intraday is needed for a true 1D view and preferable for 1W.
-      if(homeRange==='1d'){
-        const intraday=liveIntradayPath(history).filter(r=>r.date.slice(0,10)===asOf);
-        return intraday.length>=2 ? intraday : null;
+      const baseline=daily.filter(p=>p.date<=cutoff).at(-1);
+      let points=baseline?[baseline,...daily.filter(p=>p.date>cutoff)]:
+        daily.filter(p=>p.date>cutoff);
+      // For a 1W view add the latest trading session's intraday movement
+      // without counting that trading day twice.
+      if(homeRange==='1w' && lastIntra && lastIntra.date.slice(0,10)===endDay){
+        const recent=intraday.filter(p=>p.date.slice(0,10)===endDay);
+        if(recent.length>=2)points=points.filter(p=>p.date<endDay).concat(recent);
       }
-      const firstAtOrAfter=history.findIndex(r=>r.date>=cutoff);
-      const pos=Math.max(0,firstAtOrAfter-1);
-      const base=history.slice(pos);
-      if(homeRange==='1w' && liveMarket?.intraday?.length){
-        const intra=liveIntradayPath(history).filter(r=>r.date.slice(0,10)>=cutoff);
-        return [...base.filter(r=>r.date<intra[0]?.date.slice(0,10)),...intra];
-      }
-      return base.length>=2?base:null;
+      return points.length>=2?points:null;
     }
     function periodPerformance(points){
       if(!points || points.length<2)return null;
@@ -1631,7 +1652,17 @@
     function pct(n){return n==null?'—':(n>=0?'+':'')+(n*100).toFixed(1)+'%';}
     function homeAxisDate(dt){
       if(!dt)return '';
-      return dateLabel(dt.slice(0,7));
+      const [year,month,day]=dt.slice(0,10).split('-').map(Number);
+      const date=new Date(Date.UTC(year,month-1,day,12));
+      const fmt=['1d','1w','1m','3m'].includes(homeRange)
+        ?{month:'short',day:'numeric',timeZone:'UTC'}
+        :{month:'short',year:'numeric',timeZone:'UTC'};
+      let label=new Intl.DateTimeFormat('en-US',fmt).format(date);
+      if(homeRange==='1d' && dt.includes('T')){
+        const [hour,minute]=dt.slice(11,16).split(':').map(Number);
+        label+=' '+(hour%12||12)+':'+String(minute).padStart(2,'0')+(hour<12?' AM':' PM');
+      }
+      return label;
     }
     function homeStatusLabel(){
       if(!liveMarket)return 'Sample through Sep 2026';
