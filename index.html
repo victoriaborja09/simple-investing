@@ -1680,7 +1680,8 @@
       const fmt=['1d','1w','1m','3m'].includes(homeRange)
         ?{month:'short',day:'numeric',timeZone:'UTC'}
         :{month:'short',year:'numeric',timeZone:'UTC'};
-      let label=new Intl.DateTimeFormat('en-US',fmt).format(date);
+      const locale={en:'en-US',es:'es-ES',fr:'fr-FR',it:'it-IT'}[currentLang]||'en-US';
+      let label=new Intl.DateTimeFormat(locale,fmt).format(date);
       if(homeRange==='1d' && dt.includes('T')){
         const [hour,minute]=dt.slice(11,16).split(':').map(Number);
         label+=' '+(hour%12||12)+':'+String(minute).padStart(2,'0')+(hour<12?' AM':' PM');
@@ -1724,7 +1725,7 @@
       }
       const assetTiles=portfolioAssets.map(a=>`<button class="asset-mini" type="button" onclick="showHomeAsset('${a.ticker}')" aria-label="View ${a.ticker} details">
         <div class="asset-mini-top"><i class="asset-mini-dot" style="background:${a.color}"></i>${a.ticker}</div>
-        <div class="asset-mini-weight">${a.pct}%</div><div class="asset-mini-ytd">${pct(fundYtd(a.ticker))} YTD</div></button>`).join('');
+        <div class="asset-mini-weight">${a.pct}%</div><div class="asset-mini-ytd">${pct(fundYtd(a.ticker))} ${ui('fundYTD')}</div></button>`).join('');
       const gain=period?.gain ?? null;
       const changeText=gain===null ? ui('unavailable') :
         (gain>=0?'+':'−')+moneyChange(Math.abs(gain))+' ('+pct(period.percent)+') · '+rangeName(homeRange);
@@ -1935,7 +1936,7 @@
       const modal=document.createElement('div');
       modal.className='sheet-overlay'; modal.id='holdingSheet';
       modal.onclick=(e)=>{if(e.target===modal) closeHomeAsset()};
-      modal.innerHTML=`<section class="sheet-panel" role="dialog" aria-modal="true" aria-label="${ticker} details"><div class="sheet-title-row"><h3><span class="asset-mini-dot" style="background:${a.color};width:12px;height:12px;margin-right:9px"></span>${ticker}</h3><button class="sheet-close" type="button" onclick="closeHomeAsset()" aria-label="Close">×</button></div><strong>${t(a.nameKey)}</strong><p>${t(a.detailKey)}</p><div class="sheet-stat-grid"><div class="sheet-stat"><small>Portfolio share</small><strong>${a.pct}%</strong></div><div class="sheet-stat"><small>Approx. value</small><strong>${money(latest.balance*a.pct/100)}</strong></div></div><div class="sheet-stat-grid"><div class="sheet-stat"><small>Fund YTD return</small><strong>${pct(fundYtd(ticker))}</strong></div><div class="sheet-stat"><small>As of</small><strong>${liveMarket?dateInNY(liveMarket.asOf):'Sep 2026 demo'}</strong></div></div></section>`;
+      modal.innerHTML=`<section class="sheet-panel" role="dialog" aria-modal="true" aria-label="${ticker} ${ui('holdingDetails')}"><div class="sheet-title-row"><h3><span class="asset-mini-dot" style="background:${a.color};width:12px;height:12px;margin-right:9px"></span>${ticker}</h3><button class="sheet-close" type="button" onclick="closeHomeAsset()" aria-label="${t('finish')}">×</button></div><strong>${t(a.nameKey)}</strong><p>${t(a.detailKey)}</p><div class="sheet-stat-grid"><div class="sheet-stat"><small>${ui('fundShare')}</small><strong>${a.pct}%</strong></div><div class="sheet-stat"><small>${ui('fundValue')}</small><strong>${money(latest.balance*a.pct/100)}</strong></div></div><div class="sheet-stat-grid"><div class="sheet-stat"><small>${ui('fundReturn')} · ${ui('fundYTD')}</small><strong>${pct(fundYtd(ticker))}</strong></div><div class="sheet-stat"><small>${ui('asOf')}</small><strong>${liveMarket?dateInNY(liveMarket.asOf):ui('sample')}</strong></div></div></section>`;
       document.querySelector('.screen').appendChild(modal);
     }
     function closeHomeAsset(){document.getElementById('holdingSheet')?.remove();homeSelectedAsset=null;}
