@@ -2240,48 +2240,97 @@ const learnLessons=[["stocks","◧",{"en":"What is a stock?","es":"¿Qué es una
   function learnTabSet(tab){learnTab=tab;renderScreen()}
   function learnPreset(q){learnQ=q;learnTab='explore';renderScreen()}
   function learnStar(id){if(!learnAssets.some(x=>x.id===id))return;learnSaved=learnSaved.includes(id)?learnSaved.filter(x=>x!==id):[...learnSaved,id];storeL('saved',learnSaved);renderScreen();if(learnModal?.kind==='asset')learnShow()}
-  function renderLearnPage(){
-    let main='';
-    if(learnTab==='explore'){
-      main='<div class="learn-h"><strong>'+lw('start')+'</strong></div><div class="learn-chips">'+['AAPL','NVDA','SCHD'].map(id=>'<button onclick="learnPreset(\''+id+'\')">'+id+'</button>').join('')+'</div><div class="learn-h"><strong>'+lw('ideas')+'</strong></div><div id="learnRows">'+learnRows()+'</div><div class="learn-h"><strong>'+lw('basics')+'</strong><small>'+lw('minutes')+'</small></div>'+learnLessons.map(x=>'<button class="learn-lesson" onclick="learnOpenLesson(\''+x[0]+'\')"><span class="symbol">'+x[1]+'</span><span class="text"><strong>'+le(x[2][currentLang]||x[2].en)+'</strong><small>'+le(x[3][currentLang]||x[3].en)+'</small></span><span style="color:#9bbaa6">'+(learnReads.includes(x[0])?'✓':'›')+'</span></button>').join('')+'<div class="learn-note">'+lw('marketNote')+'</div>';
-    }else if(learnTab==='saved'){
-      const saved=learnSaved.map(k=>learnAssets.find(x=>x.id===k)).filter(Boolean);
-      main='<div class="learn-h"><strong>'+lw('watch')+'</strong><small>'+saved.length+'</small></div>'+(saved.length?saved.map(learnRow).join(''):'<div class="learn-empty">'+lw('empty')+'</div>');
-    }else{
-      const total=learnOrders.reduce((a,b)=>a+b.amount,0);
-      main='<div class="learn-h"><strong>'+lw('practice')+'</strong><small>'+learnOrders.length+' '+lw('orders')+'</small></div>'+(learnOrders.length?learnOrders.slice().reverse().map(x=>'<div class="learn-order"><div><strong>'+le(x.id)+'</strong><small>'+new Date(x.date).toLocaleDateString(currentLang==='en'?'en-US':currentLang,{month:'short',day:'numeric'})+'</small></div><strong>
-</html>+x.amount.toFixed(2)+'</strong></div>').join(''):'<div class="learn-empty">'+lw('emptyOrders')+'</div>')+'<div class="learn-h"><strong>'+lw('total')+'</strong><strong>
-</html>+total.toFixed(2)+'</strong></div><div class="learn-note">'+lw('notLive')+'</div>';
-    }
-    let n=Math.min(learnOrders.length,3);
-    return '<div class="learn-page"><h2>'+lw('title')+'</h2><p class="intro">'+lw('intro')+'</p><label class="learn-search"><span>⌕</span><input aria-label="'+le(lw('search'))+'" type="search" placeholder="'+le(lw('search'))+'" value="'+le(learnQ)+'" oninput="learnInput(this.value)"></label><div class="learn-menu">'+[['explore','explore'],['saved','saved'],['practice','practice']].map(x=>'<button class="'+(learnTab===x[0]?'active':'')+'" onclick="learnTabSet(\''+x[0]+'\')" aria-pressed="'+(learnTab===x[0])+'">'+lw(x[1])+'</button>').join('')+'</div>'+main+'<div class="learn-journey"><strong>'+lw(n>=3?'ready':'journey')+'</strong><p>'+lw(n>=3?'readyText':'journeyText')+'</p><div class="learn-bar"><i style="width:'+(n*100/3)+'%"></i></div><small>'+n+'/3 '+lw('orders')+'</small><button onclick="learnUpgrade()">'+lw('graduate')+' ↗</button></div></div>';
+function renderLearnPage(){
+  let main='';
+  if(learnTab==='explore'){
+    main=`<div class="learn-h"><strong>${lw('start')}</strong></div>
+      <div class="learn-chips">${['AAPL','NVDA','SCHD'].map(id=>`<button onclick="learnPreset('${id}')">${id}</button>`).join('')}</div>
+      <div class="learn-h"><strong>${lw('ideas')}</strong></div>
+      <div id="learnRows">${learnRows()}</div>
+      <div class="learn-h"><strong>${lw('basics')}</strong><small>${lw('minutes')}</small></div>
+      ${learnLessons.map(x=>`<button class="learn-lesson" onclick="learnOpenLesson('${x[0]}')">
+        <span class="symbol">${x[1]}</span><span class="text"><strong>${le(x[2][currentLang]||x[2].en)}</strong>
+        <small>${le(x[3][currentLang]||x[3].en)}</small></span>
+        <span style="color:#9bbaa6">${learnReads.includes(x[0])?'✓':'›'}</span></button>`).join('')}
+      <div class="learn-note">${lw('marketNote')}</div>`;
+  }else if(learnTab==='saved'){
+    const saved=learnSaved.map(id=>learnAssets.find(a=>a.id===id)).filter(Boolean);
+    main=`<div class="learn-h"><strong>${lw('watch')}</strong><small>${saved.length}</small></div>
+      ${saved.length?saved.map(learnRow).join(''):`<div class="learn-empty">${lw('empty')}</div>`}`;
+  }else{
+    const total=learnOrders.reduce((sum,o)=>sum+o.amount,0);
+    main=`<div class="learn-h"><strong>${lw('practice')}</strong><small>${learnOrders.length} ${lw('orders')}</small></div>
+      ${learnOrders.length?learnOrders.slice().reverse().map(o=>`<div class="learn-order">
+        <div><strong>${le(o.id)}</strong><small>${new Date(o.date).toLocaleDateString(currentLang==='en'?'en-US':currentLang,{month:'short',day:'numeric'})}</small></div>
+        <strong>$${o.amount.toFixed(2)}</strong></div>`).join(''):`<div class="learn-empty">${lw('emptyOrders')}</div>`}
+      <div class="learn-h"><strong>${lw('total')}</strong><strong>$${total.toFixed(2)}</strong></div>
+      <div class="learn-note">${lw('notLive')}</div>`;
   }
-  function learnOpen(id){if(!learnAssets.some(x=>x.id===id))return;learnModal={kind:'asset',id};learnAmount=25;learnShow()}
+  const n=Math.min(learnOrders.length,3);
+  return `<div class="learn-page"><h2>${lw('title')}</h2><p class="intro">${lw('intro')}</p>
+    <label class="learn-search"><span>⌕</span><input aria-label="${le(lw('search'))}" type="search"
+      placeholder="${le(lw('search'))}" value="${le(learnQ)}" oninput="learnInput(this.value)"></label>
+    <div class="learn-menu">${[['explore','explore'],['saved','saved'],['practice','practice']].map(x=>`<button
+      class="${learnTab===x[0]?'active':''}" onclick="learnTabSet('${x[0]}')"
+      aria-pressed="${learnTab===x[0]}">${lw(x[1])}</button>`).join('')}</div>
+    ${main}
+    <div class="learn-journey"><strong>${lw(n>=3?'ready':'journey')}</strong>
+      <p>${lw(n>=3?'readyText':'journeyText')}</p>
+      <div class="learn-bar"><i style="width:${n*100/3}%"></i></div>
+      <small>${n}/3 ${lw('orders')}</small>
+      <button onclick="learnUpgrade()">${lw('graduate')} ↗</button>
+    </div></div>`;
+}
+    function learnOpen(id){if(!learnAssets.some(x=>x.id===id))return;learnModal={kind:'asset',id};learnAmount=25;learnShow()}
   function learnOpenLesson(id){if(!learnLessons.some(x=>x[0]===id))return;learnModal={kind:'lesson',id};if(!learnReads.includes(id)){learnReads.push(id);storeL('reads',learnReads)}learnShow()}
   function learnClose(){document.getElementById('learnOverlay')?.remove();learnModal=null}
   function learnPopup(body){let o=document.getElementById('learnOverlay');if(!o){o=document.createElement('div');o.id='learnOverlay';o.className='learn-overlay';o.addEventListener('click',ev=>{if(ev.target===o)learnClose()});document.querySelector('.screen').appendChild(o)}o.innerHTML='<section class="learn-sheet" role="dialog" aria-modal="true">'+body+'</section>'}
-  function learnShow(){
-    if(!learnModal)return;let m=learnModal;
-    if(m.kind==='asset'||m.kind==='order'){
-      const x=learnAssets.find(x=>x.id===m.id),title='<div class="rowtop"><h3>'+le(x.name)+'</h3><button class="close" onclick="learnClose()">×</button></div>';
-      if(m.kind==='asset'){
-        learnPopup(title+'<p><strong>'+x.id+' · '+lw(x.kind)+'</strong> · '+lw(x.sector)+'</p><p>'+lw('companyText')+'</p><div class="shade"><strong>'+lw('risk')+'</strong><br>'+lw(x.kind==='etf'?'etfRisk':'stockRisk')+'</div><div class="learn-actions"><button onclick="learnStar(\''+x.id+'\')">'+lw(learnSaved.includes(x.id)?'remove':'save')+' ☆</button><button class="primary" onclick="learnModal={kind:\'order\',id:\''+x.id+'\'};learnShow()">'+lw('try')+'</button></div>');
-      }else{
-        learnPopup(title+'<p>'+lw('practiceText')+'</p><div class="learn-amounts">'+[10,25,50].map(a=>'<button class="'+(learnAmount===a?'active':'')+'" onclick="learnAmount='+a+';learnShow()">
-</html>+a+'</button>').join('')+'</div><div class="learn-actions"><button onclick="learnClose()">'+lw('cancel')+'</button><button class="primary" onclick="learnConfirm(\''+x.id+'\')">'+lw('record')+'</button></div>');
-      }
-    }else if(m.kind==='lesson'){
-      const x=learnLessons.find(x=>x[0]===m.id),lang=currentLang;
-      learnPopup('<div class="rowtop"><h3>'+le(x[2][lang]||x[2].en)+'</h3><button class="close" onclick="learnClose()">×</button></div><p><strong>'+le(x[3][lang]||x[3].en)+'</strong></p><p>'+le(x[4][lang]||x[4].en)+'</p><div class="learn-actions"><button onclick="learnGuide(\''+x[5]+'\')">'+lw('readMore')+' ↗</button><button class="primary" onclick="learnClose();renderScreen()">'+lw('done')+'</button></div>');
-    }else if(m.kind==='success'){
-      learnPopup('<div class="rowtop"><h3>'+lw('success')+'</h3><button class="close" onclick="learnClose()">×</button></div><p>'+lw('notLive')+'</p><div class="learn-actions"><button class="primary" onclick="learnClose();learnTabSet(\'practice\')">'+lw('done')+'</button>'+(learnOrders.length>=3?'<button onclick="learnUpgrade()">'+lw('graduate')+'</button>':'')+'</div>');
-    }else if(m.kind==='upgrade'){
-      learnPopup('<div class="rowtop"><h3>'+lw('ready')+'</h3><button class="close" onclick="learnClose()">×</button></div><p>'+lw('readyText')+'</p><div class="shade">'+lw('concept')+'</div><div class="learn-actions"><button onclick="learnClose()">'+lw('cancel')+'</button><button class="primary" onclick="learnModal={kind:\'preview\'};learnShow()">'+lw('preview')+'</button></div>');
-    }else if(m.kind==='preview'){
-      learnPopup('<div class="rowtop"><h3>'+lw('preview')+'</h3><button class="close" onclick="learnClose()">×</button></div><p>'+lw('previewText')+'</p><div class="learn-actions"><button class="primary" onclick="learnClose()">'+lw('done')+'</button></div>');
+function learnShow(){
+  if(!learnModal)return;
+  const m=learnModal;
+  if(m.kind==='asset'||m.kind==='order'){
+    const a=learnAssets.find(x=>x.id===m.id);
+    if(!a)return;
+    const title=`<div class="rowtop"><h3>${le(a.name)}</h3><button class="close" onclick="learnClose()">×</button></div>`;
+    if(m.kind==='asset'){
+      learnPopup(`${title}<p><strong>${a.id} · ${lw(a.kind)}</strong> · ${lw(a.sector)}</p>
+        <p>${lw('companyText')}</p><div class="shade"><strong>${lw('risk')}</strong>
+        <p>${lw(a.kind==='etf'?'etfRisk':'stockRisk')}</p></div>
+        <div class="learn-actions"><button onclick="learnStar('${a.id}')">${lw(learnSaved.includes(a.id)?'remove':'save')} ☆</button>
+        <button class="primary" onclick="learnModal={kind:'order',id:'${a.id}'};learnShow()">${lw('try')}</button></div>`);
+    }else{
+      learnPopup(`${title}<p>${lw('practiceText')}</p>
+        <div class="learn-amounts">${[10,25,50].map(n=>`<button class="${learnAmount===n?'active':''}"
+          onclick="learnAmount=${n};learnShow()">$${n}</button>`).join('')}</div>
+        <div class="learn-actions"><button onclick="learnClose()">${lw('cancel')}</button>
+        <button class="primary" onclick="learnConfirm('${a.id}')">${lw('record')}</button></div>`);
     }
+  }else if(m.kind==='lesson'){
+    const x=learnLessons.find(x=>x[0]===m.id);
+    if(!x)return;
+    learnPopup(`<div class="rowtop"><h3>${le(x[2][currentLang]||x[2].en)}</h3>
+      <button class="close" onclick="learnClose()">×</button></div>
+      <p><strong>${le(x[3][currentLang]||x[3].en)}</strong></p>
+      <p>${le(x[4][currentLang]||x[4].en)}</p>
+      <div class="learn-actions"><button onclick="learnGuide('${x[5]}')">${lw('readMore')} ↗</button>
+      <button class="primary" onclick="learnClose();renderScreen()">${lw('done')}</button></div>`);
+  }else if(m.kind==='success'){
+    learnPopup(`<div class="rowtop"><h3>${lw('success')}</h3><button class="close" onclick="learnClose()">×</button></div>
+      <p>${lw('notLive')}</p><div class="learn-actions">
+      <button class="primary" onclick="learnClose();learnTabSet('practice')">${lw('done')}</button>
+      ${learnOrders.length>=3?`<button onclick="learnUpgrade()">${lw('graduate')}</button>`:''}</div>`);
+  }else if(m.kind==='upgrade'){
+    learnPopup(`<div class="rowtop"><h3>${lw('ready')}</h3><button class="close" onclick="learnClose()">×</button></div>
+      <p>${lw('readyText')}</p><div class="shade">${lw('concept')}</div>
+      <div class="learn-actions"><button onclick="learnClose()">${lw('cancel')}</button>
+      <button class="primary" onclick="learnModal={kind:'preview'};learnShow()">${lw('preview')}</button></div>`);
+  }else if(m.kind==='preview'){
+    learnPopup(`<div class="rowtop"><h3>${lw('preview')}</h3><button class="close" onclick="learnClose()">×</button></div>
+      <p>${lw('previewText')}</p><div class="learn-actions">
+      <button class="primary" onclick="learnClose()">${lw('done')}</button></div>`);
   }
-  function learnGuide(url){if(url.startsWith('https://www.investor.gov/'))window.open(url,'_blank','noopener,noreferrer')}
+}
+    function learnGuide(url){if(url.startsWith('https://www.investor.gov/'))window.open(url,'_blank','noopener,noreferrer')}
   function learnConfirm(id){if(!learnAssets.some(x=>x.id===id))return;learnOrders.push({id,amount:learnAmount,date:new Date().toISOString()});storeL('orders',learnOrders);learnModal={kind:'success'};renderScreen();learnShow()}
   function learnUpgrade(){learnModal={kind:'upgrade'};learnShow()}
 
