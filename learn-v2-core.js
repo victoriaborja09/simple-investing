@@ -132,7 +132,7 @@ function l2back(){L2.view='list';L2.selected=null;l2draw();}
 function l2tab(tab){
  L2.tab=tab;L2.view='list';L2.selected=null;l2draw();
  if(tab==='saved')l2loadQuotes(learnSaved);
- if(tab==='practice')l2loadQuotes(l2positions().map(x=>x.symbol));
+ if(tab==='practice'){l2loadQuotes(l2positions().map(x=>x.symbol));l2loadPaperSeries();}
 }
 function l2range(period){if(!L2RANGES.includes(period))return;L2.period=period;l2draw();l2loadAsset(L2.selected,period)}
 function l2paperRange(period){if(!L2RANGES.includes(period))return;L2.paperRange=period;l2draw();l2loadPaperSeries()}
@@ -180,7 +180,15 @@ function l2submitTrade(){
  if(result.error){L2.error.trade=result.error;l2draw();return}
  delete L2.error.trade;L2.modal='success';l2draw();
 }
+function l2reset(){L2.paper={cash:500,trades:[]};l2persist();L2.modal=null;l2draw()}
 function l2preview(){L2.modal='upgrade';l2draw()}
 function l2displayNum(n,dp=2){
  return Number.isFinite(n)?new Intl.NumberFormat(l2loc(),{maximumFractionDigits:dp}).format(n):'—';
 }
+
+// Refresh only while Learn is visible, conserving free API credits.
+setInterval(()=>{if(document.hidden||!l2isLearn())return;
+ if(L2.view==='detail'&&L2.selected)l2loadAsset(L2.selected,L2.period,true);
+ else if(L2.tab==='saved')l2loadQuotes(learnSaved,true);
+ else if(L2.tab==='practice')l2loadQuotes(l2positions().map(x=>x.symbol),true);
+},600000);
