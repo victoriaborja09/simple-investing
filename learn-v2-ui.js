@@ -77,6 +77,7 @@ function l2periodChart(){
  if(waiting)return '<div class="pending">'+lt('loading')+'</div>';
  return '<div class="empty">'+(L2.error[key]?lt('error'):lt('noHistory'))+'</div>';
 }
+const l2Overview={"en":{"AAPL":"Apple makes iPhones, Macs, software and services. Sales depend on consumer demand, product cycles and its global ecosystem.","NVDA":"NVIDIA designs graphics processors and computing systems used in AI, gaming and data centers. Demand and valuations can be volatile.","MSFT":"Microsoft provides business software, cloud computing and consumer technology.","SPYM":"This ETF tracks the S&P 500, giving exposure to approximately 500 large U.S. companies.","VXUS":"This ETF invests in thousands of companies outside the United States across developed and emerging markets.","SGOV":"This fund holds very short-term U.S. Treasury bills, which typically fluctuate less than stocks.","SCHD":"This ETF follows a dividend-focused index of established U.S. companies.","QQQ":"This ETF tracks the Nasdaq-100, with significant exposure to large technology-oriented companies.","VOO":"This ETF tracks the S&P 500 index of large U.S. companies.","VTI":"This ETF spans large, medium and small U.S. public companies.","BND":"This ETF holds diversified U.S. investment-grade bonds, which may fall when interest rates rise.","SCHZ":"This ETF holds a broad portfolio of investment-grade U.S. bonds."},"es":{"AAPL":"Apple fabrica iPhone, Mac, software y servicios. Depende de la demanda de consumidores y del ciclo de productos.","NVDA":"NVIDIA diseña procesadores y sistemas para inteligencia artificial, videojuegos y centros de datos.","SPYM":"Este ETF sigue el S&P 500, con exposición a unas 500 grandes empresas estadounidenses.","VXUS":"Este ETF invierte en miles de empresas fuera de Estados Unidos.","SGOV":"Este fondo contiene letras del Tesoro estadounidense a muy corto plazo.","SCHD":"Este ETF sigue un índice de empresas estadounidenses centrado en dividendos."},"it":{"AAPL":"Apple produce iPhone, Mac, software e servizi. Dipende dalla domanda e dai cicli di prodotto.","NVDA":"NVIDIA progetta processori e sistemi per intelligenza artificiale, gaming e centri dati.","SPYM":"Questo ETF replica l'S&P 500, con circa 500 grandi società statunitensi.","VXUS":"Questo ETF investe in migliaia di società fuori dagli Stati Uniti.","SGOV":"Questo fondo detiene titoli del Tesoro USA a brevissimo termine.","SCHD":"Questo ETF segue un indice di società USA con dividendi."},"fr":{"AAPL":"Apple conçoit des iPhone, Mac, logiciels et services. Son activité dépend de la demande et des cycles produits.","NVDA":"NVIDIA conçoit des processeurs et systèmes pour l’IA, les jeux et les centres de données.","SPYM":"Cet ETF suit le S&P 500, soit environ 500 grandes sociétés américaines.","VXUS":"Cet ETF investit dans des milliers de sociétés hors des États-Unis.","SGOV":"Ce fonds détient des bons du Trésor américain à très court terme.","SCHD":"Cet ETF suit un indice américain axé sur les dividendes."}};
 function l2assetDetail(){
  const symbol=L2.selected,a=l2asset(symbol),quote=l2quote(symbol),rec=L2.marketCache.get(l2key(symbol,L2.period));
  const change=rec?.bars?.length>=2?(rec.bars.at(-1).close/rec.bars[0].close-1)*100:
@@ -99,6 +100,8 @@ function l2assetDetail(){
  '<div class="quotedelta '+color+'">'+(Number.isFinite(change)?l2pct(change)+' · '+L2.period:lt('loading'))+'</div>'+
  l2periods(L2.period,'l2range')+
  l2periodChart()+
+ '<div class="sectionline"><strong>'+lt('about')+'</strong></div>'+
+ '<p class="hint">'+l2safe(l2Overview[currentLang]?.[symbol]||l2Overview.en[symbol]||lt('free'))+'</p>'+
  '<div class="sectionline"><strong>'+lt('basic')+'</strong><small>'+lt('data')+' '+l2safe(quote?.asOf?.slice(0,10)||'—')+'</small></div>'+
  '<div class="twocol">'+details+'</div>'+
  (pos?'<div class="safehint">'+lt('shares')+': '+l2displayNum(pos.qty,6)+' · '+lt('cost')+': '+l2money(pos.cost)+'</div>':'')+
@@ -172,7 +175,8 @@ function l2practice(){
  '<div class="sectionline"><strong>'+lt('transactions')+'</strong></div>'+
  (recent||'<div class="empty">'+lt('noTrades')+'</div>')+
  (milestone?'<div class="banner"><strong>'+lt('ready')+'</strong><p>'+lt('milestone')+'</p><button onclick="l2preview()">'+lt('ready')+' ↗</button></div>':'')+
- '<div class="safehint">'+lt('note')+'</div>';
+ '<div class="safehint">'+lt('note')+'</div>'+
+ '<button class="linkbtn" onclick="L2.modal=\'reset\';l2draw()">Reset practice account</button>';
 }
 function l2tradingModal(){
  if(!L2.modal)return '';
@@ -190,6 +194,8 @@ function l2tradingModal(){
   '<button class="confirm" onclick="l2submitTrade()">'+lt('record')+'</button>';
  }else if(L2.modal==='success'){
   content='<h3>'+lt('done')+'</h3><p>'+lt('note')+'</p><button class="confirm" onclick="l2closeModal();l2tab(\'practice\')">'+lt('practice')+'</button>';
+ }else if(L2.modal==='reset'){
+  content='<h3>Reset practice account?</h3><p>This will clear all simulated positions and return to $500 in virtual cash.</p><button class="confirm" onclick="l2reset()">Reset account</button><button class="secondary" onclick="l2closeModal()">'+lt('cancel')+'</button>';
  }else if(L2.modal==='upgrade'){
   content='<h3>'+lt('ready')+'</h3><p>'+lt('preview')+'</p><p>'+lt('milestone')+'</p>'+
    '<div class="safehint">'+lt('footer')+'</div><button class="confirm" onclick="l2closeModal()">'+lt('done')+'</button>';
