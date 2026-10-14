@@ -879,6 +879,23 @@
     .learn-amounts button{flex:1;border:1px solid #dceadd;border-radius:10px;background:white;padding:10px 4px;font-weight:800;cursor:pointer}
     .learn-amounts button.active{border-color:#22c973;background:#e9faee;color:#0f9850}
 
+  
+    /* Learn & Explore: conceptual path into an existing brokerage. */
+    .full-platform-cta{background:linear-gradient(135deg,#effaf3,#e5f5ee);border:1px solid #cde9d6;border-radius:19px;padding:15px;margin:14px 0 17px;box-shadow:0 6px 20px rgba(22,120,63,.06)}
+    .full-platform-cta-header{display:flex;align-items:center;justify-content:space-between;color:#178b52;font-size:10px;letter-spacing:.08em;font-weight:800;margin-bottom:7px}
+    .full-platform-cta-header span:last-child{font-size:19px;letter-spacing:0}
+    .full-platform-cta>strong{font-size:16px;color:#153d28;display:block;line-height:1.25}
+    .full-platform-cta p{font-size:11.5px;line-height:1.5;color:#58735f;margin:7px 0 12px}
+    .full-platform-cta button,.platform-preview button{width:100%;border:0;border-radius:11px;background:#19c66c;color:#082416;font:800 12px system-ui;padding:12px 13px;cursor:pointer}
+    .full-platform-cta button:hover,.platform-preview button:hover{background:#38d685}
+    .full-platform-cta button:focus-visible,.platform-preview button:focus-visible{outline:3px solid #17623a;outline-offset:3px}
+    .platform-preview{display:flex;flex-direction:column;align-items:center;text-align:center;padding:46px 13px 18px}
+    .platform-preview-kicker{font-size:11px;letter-spacing:.12em;font-weight:800;color:#1aa668;text-transform:uppercase}
+    .platform-preview-icon{display:flex;align-items:center;justify-content:center;font-size:32px;color:#087c47;background:#e6f9ed;border-radius:50%;width:76px;height:76px;margin:22px 0 7px}
+    .platform-preview h2{font-size:26px;line-height:1.15;color:#143e29;margin:9px 0}
+    .platform-preview p{font-size:13px;line-height:1.58;color:#667d6c;margin:5px 0 18px}
+    .platform-preview-caveat{font-size:11px;line-height:1.5;color:#718876;border:1px solid #e2eee7;background:#f5faf7;padding:12px;border-radius:13px;margin-bottom:22px}
+
   </style>
   <link rel="stylesheet" href="./learn-v2.css">
 </head>
@@ -1013,7 +1030,15 @@
         accountNavHome: 'Home',
         accountNavPortfolio: 'Portfolio',
         accountNavLearn: 'Learn',
-        accountNavYou: 'You',
+        accountNavYou: 'Full Platform',
+        fullPlatformEyebrow: 'THE NEXT STEP',
+        fullPlatformPrompt: 'Ready to explore more?',
+        fullPlatformPromptCopy: 'Discover where your investing journey could go beyond the preset portfolio.',
+        fullPlatformAction: 'Explore the full platform',
+        fullPlatformTitle: 'Full Platform',
+        fullPlatformDescription: 'Simple Investing is designed as an entry point within an existing brokerage. As your confidence grows, this is where you could explore that brokerage’s wider investing tools, including individual stocks, ETFs, and other offerings.',
+        fullPlatformCaveat: 'Preview only. Broader brokerage features and real-money trading are not available in this prototype.',
+        fullPlatformBack: 'Back to Learn & Explore',
         placeholderTitle: 'Coming next',
         placeholderCopy: 'We will design this screen next.',
         demoNote: 'Example account using historical ETF returns. Not live or a forecast.',
@@ -1034,7 +1059,15 @@
         accountNavHome: "Inicio",
         accountNavPortfolio: "Cartera",
         accountNavLearn: "Aprender",
-        accountNavYou: "Tú",
+        accountNavYou: "Plataforma",
+        fullPlatformEyebrow: "EL SIGUIENTE PASO",
+        fullPlatformPrompt: "¿Te gustaría explorar más?",
+        fullPlatformPromptCopy: "Descubre otras posibilidades de inversión además de la cartera predefinida.",
+        fullPlatformAction: "Explorar la plataforma completa",
+        fullPlatformTitle: "Plataforma completa",
+        fullPlatformDescription: "Simple Investing está diseñado como punto de entrada dentro de una plataforma de inversión existente. Con más confianza, podrías explorar acciones individuales, ETF y otras herramientas de esa plataforma.",
+        fullPlatformCaveat: "Solo es una vista previa. Este prototipo no ofrece operaciones reales ni acceso a una cuenta de corretaje.",
+        fullPlatformBack: "Volver a Aprender",
         placeholderTitle: "Próximamente",
         placeholderCopy: "Diseñaremos esta pantalla después.",
 
@@ -1128,7 +1161,15 @@
         accountNavHome: "Home",
         accountNavPortfolio: "Portafoglio",
         accountNavLearn: "Scopri",
-        accountNavYou: "Tu",
+        accountNavYou: "Piattaforma",
+        fullPlatformEyebrow: "IL PROSSIMO PASSO",
+        fullPlatformPrompt: "Vuoi esplorare di più?",
+        fullPlatformPromptCopy: "Scopri le possibilità di investimento oltre il portafoglio predefinito.",
+        fullPlatformAction: "Esplora la piattaforma completa",
+        fullPlatformTitle: "Piattaforma completa",
+        fullPlatformDescription: "Simple Investing è progettato come punto di accesso a una piattaforma di investimento esistente. Con maggiore sicurezza potresti esplorarne azioni singole, ETF e altri strumenti.",
+        fullPlatformCaveat: "Solo anteprima. Il prototipo non consente operazioni reali o accesso a un conto di intermediazione.",
+        fullPlatformBack: "Torna a Scopri",
         placeholderTitle: "Prossimamente",
         placeholderCopy: "Progetteremo questa pagina in seguito.",
 
@@ -1222,7 +1263,15 @@
         accountNavHome: "Accueil",
         accountNavPortfolio: "Portefeuille",
         accountNavLearn: "Découvrir",
-        accountNavYou: "Vous",
+        accountNavYou: "Plateforme",
+        fullPlatformEyebrow: "LA PROCHAINE ÉTAPE",
+        fullPlatformPrompt: "Prêt à explorer davantage ?",
+        fullPlatformPromptCopy: "Découvrez ce qui existe au-delà du portefeuille prédéfini.",
+        fullPlatformAction: "Explorer la plateforme complète",
+        fullPlatformTitle: "Plateforme complète",
+        fullPlatformDescription: "Simple Investing est conçu comme un point d’entrée dans une plateforme de courtage existante. Avec plus de confiance, vous pourriez découvrir ses actions individuelles, ses ETF et ses autres outils d’investissement.",
+        fullPlatformCaveat: "Aperçu uniquement. Ce prototype ne permet ni opérations réelles ni accès à un compte de courtage.",
+        fullPlatformBack: "Retour à Découvrir",
         placeholderTitle: "Prochainement",
         placeholderCopy: "Nous concevrons cet écran ensuite.",
 
@@ -1881,7 +1930,7 @@
         refreshMarketFeed();
     }
     function renderHomeNav() {
-      const labels=[['home','⌂','accountNavHome'],['portfolio','◉','accountNavPortfolio'],['learn','◔','accountNavLearn'],['you','⚙','accountNavYou']];
+      const labels=[['home','⌂','accountNavHome'],['portfolio','◉','accountNavPortfolio'],['learn','◔','accountNavLearn'],['you','↗','accountNavYou']];
       return `<nav class="home-nav" aria-label="Account navigation">
         ${labels.map(([id,ico,key])=>`<button class="home-nav-item ${homeTab===id?'active':''}" type="button" onclick="openHomeTab('${id}')" aria-current="${homeTab===id?'page':'false'}"><span>${ico}</span>${t(key)}</button>`).join('')}
       </nav>`;
@@ -2056,8 +2105,7 @@
       if(homeTab==='home') return renderHomeDashboard();
       if(homeTab==='portfolio') return renderHoldingDashboard();
       if(homeTab==='learn')return renderLearnPage();
-      const k='accountNavYou';
-      return `<div class="account-placeholder"><div class="bigicon">◌</div><h2>${t(k)}</h2><p>${t('placeholderTitle')}</p></div>`;
+      return `<section class="platform-preview"><span class="platform-preview-kicker">${t('placeholderTitle')}</span><div class="platform-preview-icon" aria-hidden="true">↗</div><h2>${t('fullPlatformTitle')}</h2><p>${t('fullPlatformDescription')}</p><div class="platform-preview-caveat">${t('fullPlatformCaveat')}</div><button type="button" onclick="openHomeTab('learn')">← ${t('fullPlatformBack')}</button></section>`;
     }
     function openHomeTab(id){ homeTab=id; homeSelectedAsset=null; portfolioMenuOpen=false; renderScreen(); if(id==='home'||id==='portfolio')checkPortfolioMarketOnOpen(); }
     function setHomeRange(id){ homeRange=id; renderScreen(); }
