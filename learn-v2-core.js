@@ -16,9 +16,9 @@ const L2EXTRA={"en":{"reset":"Reset practice account","resetQuestion":"Reset pra
 const lt=k=>L2EXTRA[currentLang]?.[k]||L2D[currentLang]?.[k]||L2EXTRA.en[k]||L2D.en[k]||k;
 const L2RANGES=['1D','1W','1M','3M','YTD','1Y','All'];
 const l2safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const l2money=x=>Number.isFinite(x)?new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(x):'—';
+const l2money=x=>Number.isFinite(x)?new Intl.NumberFormat(l2loc(),{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(x):'—';
 const l2num=x=>Number.isFinite(Number(x))?Number(x):null;
-const l2pct=x=>Number.isFinite(x)?(x>=0?'+':'')+x.toFixed(2)+'%':'—';
+const l2pct=x=>Number.isFinite(x)?(x>=0?'+':'')+new Intl.NumberFormat(l2loc(),{minimumFractionDigits:2,maximumFractionDigits:2}).format(x)+'%':'—';
 const l2origin='https://simple-investing-market-data.victoriaborja09.workers.dev';
 const l2loc=()=>({en:'en-US',es:'es-ES',it:'it-IT',fr:'fr-FR'})[currentLang]||'en-US';
 const l2now=()=>Date.now();
