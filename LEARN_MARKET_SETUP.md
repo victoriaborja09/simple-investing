@@ -7,9 +7,9 @@ The GitHub Pages app now contains:
 - A guided upgrade preview after practice buying three different investments
 - English, Spanish, Italian and French interface labels
 
-## Enable quotes and search
+## Verify and configure quotes and search
 
-Your **existing** Cloudflare Worker still needs to be upgraded. GitHub cannot deploy Cloudflare Worker code automatically without a separate connection.
+The Cloudflare Worker deploys separately from GitHub Pages, so changes to this repository do **not** automatically update the deployed market-data service. Verify the live endpoints before relying on them; if they are missing or returning errors, deploy the Worker version in this repository.
 
 1. Open Cloudflare > Workers & Pages > **simple-investing-market-data** > Edit code.
 2. In this repository open `cloudflare-market-worker-v2.js`, choose **Raw**, and copy its entire contents.
