@@ -18,8 +18,8 @@ function l2graph(bars,period,color){
   '<circle cx="'+xy.at(-1).x+'" cy="'+xy.at(-1).y+'" r="4" fill="'+stroke+'" stroke="#fff" stroke-width="1.5"/>'+ts+'</svg>'+
   '<div class="between"><span>'+l2safe(bars[0].time.slice(0,10))+'</span><span>'+l2safe(bars.at(-1).time.slice(0,10))+'</span></div></div>';
 }
-function l2periods(value,action){return '<div class="periods">'+L2RANGES.map(p=>
- '<button type="button" class="'+(p===value?'active':'')+'" aria-pressed="'+(p===value)+'" onclick="'+action+'(\''+p+'\')">'+(p==='All'?lt('all'):p)+'</button>').join('')+'</div>'}
+function l2periods(value,action){const labels={en:['1D','1W','1M','3M','YTD','1Y','All'],es:['1D','1S','1M','3M','Año','1A','Todo'],it:['1G','1S','1M','3M','Anno','1A','Tutto'],fr:['1J','1S','1M','3M','Année','1A','Tout']}[currentLang]||['1D','1W','1M','3M','YTD','1Y','All'];return '<div class="periods">'+L2RANGES.map((p,i)=>
+ '<button type="button" class="'+(p===value?'active':'')+'" aria-pressed="'+(p===value)+'" onclick="'+action+'(\''+p+'\')">'+labels[i]+'</button>').join('')+'</div>'}
 function l2tickerRow(asset){
  const quote=l2quote(asset.id),saved=learnSaved.includes(asset.id);
  return '<div class="assetrow"><span class="symicon '+(asset.kind==='etf'?'etf':'')+'">'+(asset.kind==='etf'?'ETF':l2safe(asset.id.slice(0,2)))+'</span>'+
@@ -103,8 +103,9 @@ function l2assetDetail(){
  l2periods(L2.period,'l2range')+
  l2periodChart()+
  '<div class="sectionline"><strong>'+lt('about')+'</strong></div>'+
- '<p class="hint">'+l2safe(l2Overview[currentLang]?.[symbol]||l2Overview.en[symbol]||lt('free'))+'</p>'+
- '<div class="sectionline"><strong>'+lt('basic')+'</strong><small>'+lt('data')+' '+l2safe(quote?.asOf?.slice(0,10)||'—')+'</small></div>'+
+ '<p class="hint">'+l2safe(l2Overview[currentLang]?.[symbol]||l2Overview.en[symbol]||lt('summary'))+'</p>'+
+ '<button class="linkbtn" onclick="window.open(\'https://finance.yahoo.com/quote/'+encodeURIComponent(symbol)+'/\',\'_blank\',\'noopener,noreferrer\')">'+lt('further')+' ↗</button>'+ 
+ '<div class="sectionline"><strong>'+lt('basic')+'</strong><small>'+lt('data')+' '+(quote?.asOf?new Date(quote.asOf).toLocaleDateString(l2loc(),{timeZone:'America/New_York',month:'short',day:'numeric',year:'numeric'}):'—')+'</small></div>'+
  '<div class="twocol">'+details+'</div>'+
  (pos?'<div class="safehint">'+lt('shares')+': '+l2displayNum(pos.qty,6)+' · '+lt('cost')+': '+l2money(pos.cost)+'</div>':'')+
  '<div class="detail-actions">'+
@@ -181,7 +182,7 @@ function l2practice(){
  (recent||'<div class="empty">'+lt('noTrades')+'</div>')+
  (milestone?'<div class="banner"><strong>'+lt('ready')+'</strong><p>'+lt('milestone')+'</p><button onclick="l2preview()">'+lt('ready')+' ↗</button></div>':'')+
  '<div class="safehint">'+lt('note')+'</div>'+
- '<button class="linkbtn" onclick="L2.modal=\'reset\';l2draw()">Reset practice account</button>';
+ '<button class="linkbtn" onclick="L2.modal=\'reset\';l2draw()">'+lt('reset')+'</button>';
 }
 function l2tradingModal(){
  if(!L2.modal)return '';
@@ -193,14 +194,14 @@ function l2tradingModal(){
   content='<h3>'+lt(side==='buy'?'buy':'sell')+' · '+l2safe(symbol)+'</h3>'+
   '<p>'+lt('price')+': '+l2money(price)+' · '+lt('cash')+': '+l2money(available)+'</p>'+
   '<div class="amounts">'+[10,25,50].map(n=>'<button class="'+(L2.tradeAmount===n?'active':'')+'" onclick="L2.tradeAmount='+n+';l2draw()">$'+n+'</button>').join('')+'</div>'+
-  '<input type="number" min="1" step="0.01" class="custom" value="'+L2.tradeAmount+'" aria-label="Paper trade amount" oninput="L2.tradeAmount=Number(this.value)" />'+
+  '<input type="number" min="1" step="0.01" class="custom" value="'+L2.tradeAmount+'" aria-label="'+lt('amount')+'" oninput="L2.tradeAmount=Number(this.value)" />'+
   '<p>'+lt('note')+'</p>'+
   (L2.error.trade?'<div class="err">'+l2safe(L2.error.trade)+'</div>':'')+
   '<button class="confirm" onclick="l2submitTrade()">'+lt('record')+'</button>';
  }else if(L2.modal==='success'){
   content='<h3>'+lt('done')+'</h3><p>'+lt('note')+'</p><button class="confirm" onclick="l2closeModal();l2tab(\'practice\')">'+lt('practice')+'</button>';
  }else if(L2.modal==='reset'){
-  content='<h3>Reset practice account?</h3><p>This will clear all simulated positions and return to $500 in virtual cash.</p><button class="confirm" onclick="l2reset()">Reset account</button><button class="secondary" onclick="l2closeModal()">'+lt('cancel')+'</button>';
+  content='<h3>'+lt('resetQuestion')+'</h3><p>'+lt('resetBody')+'</p><button class="confirm" onclick="l2reset()">'+lt('reset')+'</button><button class="secondary" onclick="l2closeModal()">'+lt('cancel')+'</button>';
  }else if(L2.modal==='upgrade'){
   content='<h3>'+lt('ready')+'</h3><p>'+lt('preview')+'</p><p>'+lt('milestone')+'</p>'+
    '<div class="safehint">'+lt('footer')+'</div><button class="confirm" onclick="l2closeModal()">'+lt('done')+'</button>';
