@@ -111,10 +111,19 @@ async function learnRoute(request,env,ctx,allow){
     bars=(Array.isArray(hist.values)?hist.values:[]).map(x=>({
       time:String(x.datetime||'').replace(' ','T'),close:Number(x.close),volume:Number(x.volume||0)
     })).filter(x=>x.time&&x.close>0).sort((a,b)=>a.time.localeCompare(b.time));
-    if(range==='1D'&&bars.length){
-      // Show only the latest completed/active trading session for 1D.
-      const day=bars.at(-1).time.slice(0,10);
-      bars=bars.filter(x=>x.time.slice(0,10)===day);
+    if(bars.length&&range!=='All'){
+      // outputsize fetches a little extra history. Filter to the user's
+      // calendar window rather than showing 35 trading days as "1M".
+      const endDay=bars.at(-1).time.slice(0,10);
+      const cutoff=new Date(endDay+'T12:00:00Z');
+      if(range==='1D'){}
+      else if(range==='1W')cutoff.setUTCDate(cutoff.getUTCDate()-7);
+      else if(range==='1M')cutoff.setUTCMonth(cutoff.getUTCMonth()-1);
+      else if(range==='3M')cutoff.setUTCMonth(cutoff.getUTCMonth()-3);
+      else if(range==='YTD')cutoff.setUTCMonth(0,1);
+      else if(range==='1Y')cutoff.setUTCFullYear(cutoff.getUTCFullYear()-1);
+      const boundary=range==='1D'?endDay:cutoff.toISOString().slice(0,10);
+      bars=bars.filter(x=>x.time.slice(0,10)>=boundary);
     }
    }catch(e){historyError='History unavailable for this subscription or ticker';}
    payload={symbol,source:'Twelve Data',quote,bars,range,historyError,
