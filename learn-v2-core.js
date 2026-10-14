@@ -2,7 +2,7 @@
 /* Simple Investing Learn v2. Educational paper trading only. No real orders. */
 const L2={
  tab:'explore',view:'list',selected:null,period:'1M',search:'',remote:[],searchStatus:'',metadata:(()=>{try{return JSON.parse(localStorage.getItem('simple_learn_metadata_v2'))||{}}catch{return {}}})(),
- marketCache:new Map(),quoteCache:new Map(),waiting:new Set(),error:{},paperRange:'All',
+ marketCache:new Map(),quoteCache:new Map(),waiting:new Set(),quotePending:new Set(),quoteFailures:{},quoteCooldownUntil:0,error:{},paperRange:'All',
  tradeMode:'buy',tradeAmount:25,modal:null,refreshing:false,searchTimer:null,
  paper:(()=>{try{const v=JSON.parse(localStorage.getItem('simple_learn_paper_v2'));return v&&Number.isFinite(v.cash)&&Array.isArray(v.trades)?v:{cash:500,trades:[]};}catch{return {cash:500,trades:[]}}})()
 };
@@ -12,7 +12,7 @@ const L2D={
  it:{title:'Impara ed esplora',basic:'Statistiche principali',portfolio:'Portafoglio di prova',search:'Cerca azione o ETF',browse:'Scopri',watch:'Preferiti',practice:'Prova',learn:'Inizia da qualcosa che conosci',intro:'Esplora oltre il portafoglio automatico.',results:'Esplora investimenti',what:'Impara le basi',hint:'Il piano automatico da $50 resta separato.',cached:'Quotazioni aggiornate quando disponibili.',view:'Dettagli',refresh:'Aggiorna',cash:'Contanti disponibili',balance:'Valore del conto di prova',gain:'Rendimento totale',holdings:'I tuoi investimenti',value:'Valore della posizione',shares:'quote',cost:'Costo di acquisto',profit:'Utile / perdita',buy:'Acquisto simulato',sell:'Vendita simulata',record:'Conferma operazione fittizia',price:'Prezzo di mercato',past:'Rendimenti passati',changes:'Variazione di prezzo',previous:'Chiusura precedente',open:'Apertura',range:'Intervallo giornaliero',volume:'Volume',week52:'Intervallo 52 settimane',about:'Questo investimento',basic:'Statistiche di base',data:'Quotazioni al',missing:'Dati non disponibili',loading:'Caricamento dati…',error:'Dati non disponibili o servizio da aggiornare. Nessun prezzo inventato.',free:'Si possono simulare solo titoli con quotazioni disponibili.',saved:'Salvato',unsave:'Salva',quote:'Quotazioni aggiornate se disponibili',start:'Esplora investimenti',ready:'Scopri gli strumenti avanzati',milestone:'Hai provato vari investimenti. Puoi scoprire la versione completa.',preview:'Le funzionalità avanzate sono solo un concetto. Nessun conto reale collegato.',whatElse:'Cerca altri simboli',searchUnavailable:'Al momento viene mostrato il catalogo iniziale. La ricerca estesa richiede il nuovo servizio.',noMatch:'Nessuna corrispondenza.',noWatch:'La lista è vuota. Salva un investimento per seguirlo.',noHold:'Nessun investimento simulato. Apri un titolo e prova ad acquistarlo.',noHistory:'Prezzi storici non disponibili per questo periodo.',noTrades:'Le transazioni simulate appariranno qui.',transactions:'Operazioni recenti',done:'Fatto',cancel:'Annulla',notEnough:'Contanti simulati insufficienti.',notOwned:'Quote simulate insufficienti.',invalid:'Serve una quotazione aggiornata per operare.',account:'Inizia con $500 virtuali',note:'Le operazioni usano i prezzi disponibili e sono salvate solo nel browser. Non modificano il piano mensile.',stock:'Azione',etf:'ETF',searchMore:'Cerca nel mercato completo',source:'Fonte',sector:'Categoria',footer:'Simulazione educativa, non investimento reale.',chart:'Storico dei prezzi',na:'Non disponibile',all:'Tutto',step:'Prossimo passo',feed:'Dati indisponibili',day:'Oggi'},
  fr:{title:'Apprendre et explorer',basic:'Statistiques essentielles',portfolio:'Portefeuille fictif',search:'Rechercher une action ou un ETF',browse:'Explorer',watch:'Suivi',practice:'Essayer',learn:'Commencez par ce que vous connaissez',intro:'Explorez au-delà de votre portefeuille automatique.',results:'Explorer les placements',what:'Apprendre les bases',hint:'Votre plan automatique de 50 $ reste distinct.',cached:'Cours mis à jour quand disponibles.',view:'Voir les détails',refresh:'Actualiser',cash:'Espèces disponibles',balance:'Valeur du compte fictif',gain:'Rendement total',holdings:'Vos positions',value:'Valeur de la position',shares:'parts',cost:'Coût de revient',profit:'Gain / perte',buy:'Achat fictif',sell:'Vente fictive',record:'Confirmer la transaction fictive',price:'Cours de marché',past:'Performance passée',changes:'Variation du cours',previous:'Clôture précédente',open:'Ouverture',range:'Fourchette du jour',volume:'Volume',week52:'Fourchette 52 semaines',about:'À propos de ce placement',basic:'Statistiques essentielles',data:'Cours au',missing:'Données indisponibles',loading:'Chargement des cours…',error:'Flux indisponible ou mise à jour nécessaire. Aucun prix inventé.',free:'Seuls les titres avec des cours disponibles peuvent être simulés.',saved:'Enregistré',unsave:'Enregistrer',quote:'Données à jour si disponibles',start:'Explorer les placements',ready:'Découvrir les outils avancés',milestone:'Vous avez essayé plusieurs placements. Découvrez la version complète quand vous le souhaitez.',preview:'Les outils avancés sont conceptuels. Aucun compte réel lié.',whatElse:'Rechercher plus de titres',searchUnavailable:'Le catalogue initial est affiché. La recherche élargie exige une mise à jour du service.',noMatch:'Aucun placement correspondant.',noWatch:'Votre liste est vide. Enregistrez un placement pour le suivre.',noHold:'Aucune position fictive. Ouvrez une action ou un ETF et essayez un achat.',noHistory:'Aucun historique disponible pour cette période.',noTrades:'Vos transactions fictives apparaîtront ici.',transactions:'Transactions récentes',done:'Terminé',cancel:'Annuler',notEnough:'Espèces fictives insuffisantes.',notOwned:'Parts fictives insuffisantes.',invalid:'Un cours récent est nécessaire pour passer un ordre.',account:'Commencez avec 500 $ fictifs',note:'Les transactions utilisent les cours disponibles et sont enregistrées dans ce navigateur. Votre plan mensuel reste inchangé.',stock:'Action',etf:'ETF',searchMore:'Chercher dans tout le marché',source:'Source',sector:'Catégorie',footer:'Simulation éducative, pas un investissement réel.',chart:'Historique du cours',na:'Indisponible',all:'Tout',step:'Étape suivante',feed:'Flux indisponible',day:'Aujourd’hui'}
 };
-const L2EXTRA={"en":{"reset":"Reset practice account","resetQuestion":"Reset practice account?","resetBody":"Clear all virtual positions and return to $500 in practice cash.","amount":"Practice amount","further":"More on Yahoo Finance","summary":"Detailed company profiles require additional market-data coverage.","holdingsValue":"In holdings"},"es":{"reset":"Reiniciar cuenta de práctica","resetQuestion":"¿Reiniciar la cuenta?","resetBody":"Borra todas las posiciones simuladas y vuelve a $500 de efectivo.","amount":"Cantidad de práctica","further":"Más detalles en Yahoo Finance","summary":"Los perfiles completos requieren más datos de mercado.","holdingsValue":"En inversiones"},"it":{"reset":"Reimposta il conto di prova","resetQuestion":"Reimpostare il conto?","resetBody":"Cancella tutte le posizioni e ripristina $500 virtuali.","amount":"Importo di prova","further":"Altre informazioni su Yahoo Finance","summary":"I profili completi richiedono altri dati di mercato.","holdingsValue":"Investito"},"fr":{"reset":"Réinitialiser le compte fictif","resetQuestion":"Réinitialiser le compte ?","resetBody":"Efface les positions fictives et rétablit 500 $ virtuels.","amount":"Montant fictif","further":"En savoir plus sur Yahoo Finance","summary":"Les profils détaillés nécessitent des données supplémentaires.","holdingsValue":"En placements"}};
+const L2EXTRA={"en":{"reset":"Reset practice account","resetQuestion":"Reset practice account?","resetBody":"Clear all virtual positions and return to $500 in practice cash.","amount":"Practice amount","further":"More on Yahoo Finance","summary":"Detailed company profiles require additional market-data coverage.","holdingsValue":"In holdings","quoteUnavailable":"Quote unavailable"},"es":{"reset":"Reiniciar cuenta de práctica","resetQuestion":"¿Reiniciar la cuenta?","resetBody":"Borra todas las posiciones simuladas y vuelve a $500 de efectivo.","amount":"Cantidad de práctica","further":"Más detalles en Yahoo Finance","summary":"Los perfiles completos requieren más datos de mercado.","holdingsValue":"En inversiones","quoteUnavailable":"Cotización no disponible"},"it":{"reset":"Reimposta il conto di prova","resetQuestion":"Reimpostare il conto?","resetBody":"Cancella tutte le posizioni e ripristina $500 virtuali.","amount":"Importo di prova","further":"Altre informazioni su Yahoo Finance","summary":"I profili completi richiedono altri dati di mercato.","holdingsValue":"Investito","quoteUnavailable":"Quotazione non disponibile"},"fr":{"reset":"Réinitialiser le compte fictif","resetQuestion":"Réinitialiser le compte ?","resetBody":"Efface les positions fictives et rétablit 500 $ virtuels.","amount":"Montant fictif","further":"En savoir plus sur Yahoo Finance","summary":"Les profils détaillés nécessitent des données supplémentaires.","holdingsValue":"En placements","quoteUnavailable":"Cours indisponible"}};
 const lt=k=>L2EXTRA[currentLang]?.[k]||L2D[currentLang]?.[k]||L2EXTRA.en[k]||L2D.en[k]||k;
 const L2RANGES=['1D','1W','1M','3M','YTD','1Y','All'];
 const l2safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -78,23 +78,38 @@ function l2loadAsset(symbol,range,force=false){
 function l2loadQuotes(symbols,force=false){
  const unique=[...new Set(symbols.map(s=>s.toUpperCase()))].filter(s=>/^[A-Z0-9.]{1,12}$/.test(s));
  const todo=unique.filter(s=>force||!L2.quoteCache.has(s)||l2now()-L2.quoteCache.get(s).stored>600000);
- if(!todo.length||L2.refreshing)return;
+ if(!todo.length||L2.refreshing||(!force&&l2now()<L2.quoteCooldownUntil))return;
  L2.refreshing=true;
+ todo.forEach(s=>{L2.quotePending.add(s);delete L2.quoteFailures[s];});
+ l2draw();
  (async()=>{
-   for(let i=0;i<todo.length;i+=5){
-     const slice=todo.slice(i,i+5);
+   // Small batches keep the free-tier provider from receiving a burst of requests.
+   for(let i=0;i<todo.length;i+=4){
+     const slice=todo.slice(i,i+4);
      try{
        const r=await fetch(l2origin+'/quotes?symbols='+encodeURIComponent(slice.join(',')),{cache:'no-store'});
        const json=await r.json().catch(()=>({}));
-       if(!r.ok||!json.quotes)throw Error('Unavailable');
+       if(!r.ok||!json.quotes)throw Error('Quote service unavailable');
+       const received=new Set();
        for(const [symbol,raw] of Object.entries(json.quotes)){
+         if(!slice.includes(symbol))continue;
          const q=l2normalizeQuote(raw);
-         if(q)L2.quoteCache.set(symbol,{quote:q,stored:l2now()});
+         if(q){L2.quoteCache.set(symbol,{quote:q,stored:l2now()});received.add(symbol);delete L2.quoteFailures[symbol];}
        }
-     }catch(e){L2.error.quotes='Market quote service unavailable';}
-     l2draw();
+       const missing=slice.filter(s=>!received.has(s));
+       for(const symbol of missing)L2.quoteFailures[symbol]='Quote unavailable';
+       if(missing.length&&json.retryAfterSeconds){
+         L2.quoteCooldownUntil=Math.max(L2.quoteCooldownUntil,l2now()+Number(json.retryAfterSeconds)*1000);
+       }
+     }catch(e){
+       for(const symbol of slice)L2.quoteFailures[symbol]=e.message||'Quote unavailable';
+       L2.error.quotes='Market quote service unavailable';
+     }finally{
+       for(const symbol of slice)L2.quotePending.delete(symbol);
+       l2draw();
+     }
    }
- })().finally(()=>{L2.refreshing=false;l2draw()});
+ })().finally(()=>{L2.refreshing=false;l2draw();});
 }
 function l2searchMarket(q){
  if(q.length<2){L2.remote=[];L2.searchStatus='';return}
