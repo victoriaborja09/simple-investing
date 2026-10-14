@@ -269,12 +269,20 @@ function l2tradingModal(){
  return '<div class="modal-bg" id="l2modal" onclick="if(event.target===this)l2closeModal()"><div class="modal-panel" role="dialog" aria-modal="true">'+
  '<button class="close" onclick="l2closeModal()" aria-label="'+lt('cancel')+'">×</button>'+content+'</div></div>';
 }
+function l2fullPlatformBanner(){
+  return `<section class="full-platform-cta" aria-label="${t('fullPlatformAction')}">
+    <div class="full-platform-cta-header"><span>${t('fullPlatformEyebrow')}</span><span aria-hidden="true">↗</span></div>
+    <strong>${t('fullPlatformPrompt')}</strong>
+    <p>${t('fullPlatformPromptCopy')}</p>
+    <button type="button" onclick="openHomeTab('you')">${t('fullPlatformAction')} <span aria-hidden="true">→</span></button>
+  </section>`;
+}
 function l2renderPage(){
  const tabs=[['explore','browse'],['saved','watch'],['practice','practice']];
  const controls='<div class="navtabs">'+tabs.map(([id,key])=>'<button class="'+(L2.tab===id?'active':'')+'" aria-pressed="'+(L2.tab===id)+'" onclick="l2tab(\''+id+'\')">'+lt(key)+'</button>').join('')+'</div>';
  const isDetail=L2.view==='detail';
  const body=isDetail?l2assetDetail():L2.tab==='explore'?l2browse():L2.tab==='saved'?l2watchlist():l2practice();
- return '<div class="learn2">'+(isDetail?'':'<span class="eyebrow">'+lt('start')+'</span><h2>'+lt('title')+'</h2><p class="hint">'+lt('intro')+'</p>'+l2searchBlock()+controls)+
+ return '<div class="learn2">'+(isDetail?'':'<span class="eyebrow">'+lt('start')+'</span><h2>'+lt('title')+'</h2><p class="hint">'+lt('intro')+'</p>'+l2fullPlatformBanner()+l2searchBlock()+controls)+
  body+(L2.modal?l2tradingModal():'')+'</div>';
 }
 // Replace the legacy Learn renderer, preserving onboarding and navigation.
