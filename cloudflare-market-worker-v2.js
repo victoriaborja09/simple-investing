@@ -6,7 +6,8 @@
  * The frontend expects a read-only endpoint returning dividend-adjusted
  * total-return indexes for SPYM, VXUS and SGOV, starting before May 2026.
  *
- * This Worker is an implementation template, NOT currently deployed.
+ * This Worker is deployed independently from GitHub Pages. Repository
+ * changes do not deploy the Worker; redeploy the Cloudflare service separately.
  * Validate the financial data provider's market-data display license before
  * making the endpoint available to public site visitors.
  */
