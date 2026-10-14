@@ -4,6 +4,8 @@
 
 [**Try the interactive prototype ↗**](https://victoriaborja09.github.io/simple-investing/)
 
+[**Read the product case study ↗**](https://victoriaborja09.github.io/simple-investing/case-study/)
+
 ## The opportunity
 
 Commission-free trading and fractional shares have reduced the financial threshold for investing, but unfamiliar portfolio choices, trading interfaces, and financial terminology can still discourage prospective investors. Simple Investing explores a narrower starting experience: one preset ETF portfolio, one monthly contribution decision, and an optional environment for learning and practice.
