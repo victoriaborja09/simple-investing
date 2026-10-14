@@ -55,13 +55,31 @@ function learnQuote(raw){
   week52Low:numeric(week.low),week52High:numeric(week.high),
   currency:raw.currency||'USD',asOf};
 }
+// Reuse successful quotes across the watchlist and asset detail routes.
+// Only genuine provider responses are cached; failures are never cached.
+async function learnCachedQuote(env,ctx,cache,symbol){
+ const key=new Request('https://simple-investing.internal/quote?symbol='+encodeURIComponent(symbol));
+ const previous=await cache.match(key);
+ if(previous){
+   const saved=await previous.json().catch(()=>null);
+   if(saved&&Number(saved.price)>0)return saved;
+ }
+ const quote=learnQuote(await learnProvider(env,'quote',{symbol}));
+ if(!quote)throw Error('Quote unavailable');
+ const response=new Response(JSON.stringify(quote),{
+   headers:{'Content-Type':'application/json','Cache-Control':'public, max-age=600'}
+ });
+ ctx.waitUntil(cache.put(key,response));
+ return quote;
+}
+
 async function learnRoute(request,env,ctx,allow){
  const uri=new URL(request.url);
  const path=uri.pathname;
  let ttl=600;
  const cache=caches.default;
  const cacheKey=new Request(uri.toString(),{method:'GET'});
- const cached=await cache.match(cacheKey);
+ const cached=path==='/quotes'?null:await cache.match(cacheKey);
  if(cached){
   const res=new Response(cached.body,cached);
   for(const [key,val] of Object.entries(corsHeaders(allow)))res.headers.set(key,val);
@@ -85,20 +103,24 @@ async function learnRoute(request,env,ctx,allow){
    const input=(uri.searchParams.get('symbols')||'').toUpperCase().split(',');
    const symbols=[...new Set(input)].filter(validSymbol).slice(0,5);
    if(!symbols.length)return responseJson({error:'No valid symbols'},400,allow);
-   ttl=600;
-   // At most five provider credits per cache miss; suitable for light prototype use.
-   const entries=await Promise.all(symbols.map(async symbol=>{
-    try{return [symbol,learnQuote(await learnProvider(env,'quote',{symbol}))]}
-    catch{return [symbol,null]}
-   }));
-   payload={source:'Twelve Data',quotes:Object.fromEntries(entries.filter(x=>x[1]))};
+   // Never cache incomplete watchlist batches. Cache successful symbols
+   // individually so retrying a failed ticker does not spend credits again.
+   const quotes={},unavailable=[];
+   for(const symbol of symbols){
+     try{quotes[symbol]=await learnCachedQuote(env,ctx,cache,symbol);}
+     catch{unavailable.push(symbol);}
+   }
+   payload={source:'Twelve Data',quotes};
+   if(unavailable.length){
+     payload.unavailable=unavailable;
+     payload.retryAfterSeconds=60;
+   }
   }else if(path==='/asset'){
    const symbol=(uri.searchParams.get('symbol')||'').toUpperCase();
    const range=uri.searchParams.get('range')||'1M';
    if(!validSymbol(symbol)||!LEARN_WINDOWS[range])return responseJson({error:'Invalid symbol or range'},400,allow);
    const cfg=LEARN_WINDOWS[range];ttl=cfg.ttl;
-   const rawQuote=await learnProvider(env,'quote',{symbol});
-   const quote=learnQuote(rawQuote);
+   const quote=await learnCachedQuote(env,ctx,cache,symbol);
    if(!quote)return responseJson({error:'Quote unavailable'},503,allow);
    // A quote can still be used to value a paper holding if historical bars
    // are unavailable on this data tier. Never invent bar prices.
@@ -130,9 +152,9 @@ async function learnRoute(request,env,ctx,allow){
      note:'Price history excludes separate cash dividend credits to the paper account.'};
   }else return responseJson({error:'Not found'},404,allow);
   const headers={'Content-Type':'application/json; charset=utf-8',
-    'Cache-Control':'public, max-age='+ttl};
+    'Cache-Control':path==='/quotes'?'no-store':'public, max-age='+ttl};
   const response=new Response(JSON.stringify(payload),{status:200,headers});
-  ctx.waitUntil(cache.put(cacheKey,response.clone()));
+  if(path!=='/quotes')ctx.waitUntil(cache.put(cacheKey,response.clone()));
   for(const [key,val] of Object.entries(corsHeaders(allow)))response.headers.set(key,val);
   return response;
  }catch(error){
