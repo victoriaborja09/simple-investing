@@ -295,6 +295,16 @@
       margin-top: 5px;
     }
     .option.selected .radio { border-color: var(--green); }
+    .custom-amount-choice {align-items:center;}
+    .custom-amount-choice strong {font-size:16px;}
+    .custom-amount-panel {margin:-5px 0 13px;padding:12px 13px;background:#f4fcf7;border:1px solid #c9e9d6;border-radius:15px;}
+    .custom-amount-panel label {display:block;margin-bottom:8px;color:#426a52;font-size:12px;font-weight:750;}
+    .custom-amount-input {background:white;border:1px solid #d4e5d9;border-radius:12px;display:flex;align-items:center;gap:6px;padding:0 12px;min-height:44px;}
+    .custom-amount-input:focus-within {border-color:#1fc876;box-shadow:0 0 0 3px #e1f9e9;}
+    .custom-amount-input span {font-weight:800;font-size:18px;color:#188a53;}
+    .custom-amount-input input {flex:1;width:100%;min-width:0;border:0;outline:0;background:transparent;color:#1b3324;font-family:inherit;font-size:17px;font-weight:750;height:42px;}
+    .custom-amount-panel small {display:block;font-size:10px;color:#647b69;margin-top:7px;line-height:1.4;}
+    #continueAmount:disabled {opacity:.42;cursor:not-allowed;box-shadow:none;}
     .option.selected .radio:after {
       content: '';
       position: absolute;
@@ -1298,6 +1308,11 @@
     let screenIndex = 0;
     let currentLang = 'en';
     let selectedAmount = 50;
+    let customAmountOpen = false;
+    let customAmountText = '';
+    const customAmountTranslations = {"en":{"button":"Choose my own amount","placeholder":"Monthly amount (USD)","hint":"Enter an amount from $1 to $10,000.","invalid":"Enter an amount between $1 and $10,000."},"es":{"button":"Elegir otra cantidad","placeholder":"Cantidad mensual (USD)","hint":"Introduce una cantidad de $1 a $10.000.","invalid":"Introduce una cantidad de $1 a $10.000."},"it":{"button":"Scegli un altro importo","placeholder":"Importo mensile (USD)","hint":"Inserisci un importo da $1 a $10.000.","invalid":"Inserisci un importo da $1 a $10.000."},"fr":{"button":"Choisir un autre montant","placeholder":"Montant mensuel (USD)","hint":"Saisissez entre 1 $ et 10 000 $.","invalid":"Saisissez entre 1 $ et 10 000 $."}};
+    function customAmountTextFor(k){return customAmountTranslations[currentLang]?.[k]||customAmountTranslations.en[k];}
+    function customAmountValid(){return /^\d{1,5}(?:\.\d{1,2})?$/.test(customAmountText)&&Number(customAmountText)>=1&&Number(customAmountText)<=10000;}
     let chartView = '5y';
     let homeRange = 'all';
     let homeTab = 'home';
@@ -1364,12 +1379,34 @@
     }
 
     function amountOptions() {
-      return [10, 25, 50, 100].map(amount => `
-        <button type="button" class="option ${selectedAmount === amount ? 'selected' : ''}" onclick="selectAmount(${amount})" aria-pressed="${selectedAmount === amount}">
-          <strong>$${amount} / ${t('perMonth')}</strong>
+      const preset=[10,25,50,100].map(amount => `
+        <button type="button" class="option ${!customAmountOpen&&selectedAmount===amount?'selected':''}" onclick="selectAmount(${amount})" aria-pressed="${!customAmountOpen&&selectedAmount===amount}">
+          <strong>${amount} / ${t('perMonth')}</strong>
           <span class="radio" aria-hidden="true"></span>
         </button>
       `).join('');
+      const customButton=`<button type="button" class="option custom-amount-choice ${customAmountOpen?'selected':''}" onclick="showCustomAmount()" aria-expanded="${customAmountOpen}" aria-pressed="${customAmountOpen}">
+        <strong>${customAmountTextFor('button')}</strong><span class="radio" aria-hidden="true"></span>
+      </button>`;
+      const customField=customAmountOpen?`<div class="custom-amount-panel">
+        <label for="monthlyCustomAmount">${customAmountTextFor('placeholder')}</label>
+        <div class="custom-amount-input"><span>$</span><input id="monthlyCustomAmount" inputmode="decimal" type="number" min="1" max="10000" step=".01" placeholder="75" value="${customAmountText.replace(/[^0-9.]/g,'')}" oninput="onCustomAmountInput(this.value)" aria-describedby="customAmountHint" /></div>
+        <small id="customAmountHint">${customAmountTextFor(customAmountText&&!customAmountValid()?'invalid':'hint')}</small>
+      </div>`:'';
+      return preset+customButton+customField;
+    }
+    function showCustomAmount(){
+      customAmountOpen=true;
+      renderScreen();
+      document.getElementById('monthlyCustomAmount')?.focus();
+    }
+    function onCustomAmountInput(value){
+      customAmountText=String(value);
+      if(customAmountValid())selectedAmount=Math.round(Number(value)*100)/100;
+      const proceed=document.getElementById('continueAmount');
+      if(proceed)proceed.disabled=!customAmountValid();
+      const hint=document.getElementById('customAmountHint');
+      if(hint)hint.textContent=customAmountTextFor(customAmountText&&!customAmountValid()?'invalid':'hint');
     }
 
     function renderMiniHeroGraph() {
@@ -1395,7 +1432,7 @@
     }
 
     function money(n) {
-      return new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', maximumFractionDigits:0}).format(n);
+      return new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', minimumFractionDigits:Number.isInteger(n)?0:2, maximumFractionDigits:2}).format(n);
     }
     function dateLabel(ym) {
       const [y, m] = ym.split('-').map(Number);
@@ -2058,7 +2095,7 @@
           <p class="subhead">${t('amountSub')}</p>
           ${amountOptions()}
         `;
-        bottomBar.innerHTML = `<button class="btn primary" onclick="nextScreen()">${t('continue')} →</button>`;
+        bottomBar.innerHTML = `<button id="continueAmount" class="btn primary" onclick="nextScreen()" ${customAmountOpen&&!customAmountValid()?'disabled':''}>${t('continue')} →</button>`;
       }
 
       if (screens[screenIndex] === 'how') {
@@ -2159,6 +2196,7 @@
     }
 
     function nextScreen() {
+      if(screens[screenIndex]==='amount'&&customAmountOpen&&!customAmountValid())return;
       if (screenIndex < screens.length - 1) {
         screenIndex += 1;
         renderScreen();
@@ -2181,6 +2219,7 @@
     }
     function selectAmount(amount) {
       selectedAmount = amount;
+      customAmountOpen=false;
       renderScreen();
     }
     function setChart(view) {
