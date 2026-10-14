@@ -184,7 +184,7 @@ function l2submitTrade(){
  delete L2.error.trade;L2.modal='success';l2draw();
 }
 function l2reset(){L2.paper={cash:500,trades:[]};l2persist();L2.modal=null;l2draw()}
-function l2preview(){L2.modal='upgrade';l2draw()}
+function l2preview(){L2.modal=null;openHomeTab('you')}
 function l2displayNum(n,dp=2){
  return Number.isFinite(n)?new Intl.NumberFormat(l2loc(),{maximumFractionDigits:dp}).format(n):'—';
 }
