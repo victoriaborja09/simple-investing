@@ -211,7 +211,8 @@ function l2paperHistory(){
 function l2practice(){
  const positions=l2positions();
  const quoteMissing=positions.some(p=>!l2quote(p.symbol));
- const total=quoteMissing?null:L2.paper.cash+positions.reduce((sum,p)=>sum+p.qty*l2quote(p.symbol).price,0);
+ const holdingsValue=quoteMissing?null:positions.reduce((sum,p)=>sum+p.qty*l2quote(p.symbol).price,0);
+ const total=holdingsValue===null?null:L2.paper.cash+holdingsValue;
  const pnl=total===null?null:(Math.abs(total-500)<0.005?0:total-500);
  const holdings=positions.map(p=>{
   const q=l2quote(p.symbol),value=q?.price>0?p.qty*q.price:null;
@@ -225,10 +226,11 @@ function l2practice(){
  const recent=[...L2.paper.trades].reverse().slice(0,5).map(t=>
   '<div class="record"><span>'+lt(t.side==='buy'?'buy':'sell')+' '+l2safe(t.symbol)+' · '+l2displayNum(t.shares,6)+'</span>'+
   '<strong>'+l2money(t.amount)+'</strong></div>').join('');
- return '<div class="practice-top"><small class="eyebrow">'+lt('portfolio')+'</small>'+
- '<div class="balance">'+l2money(total)+'</div>'+
- '<div class="meta"><span>'+lt('cash')+': '+l2money(L2.paper.cash)+'</span>'+
- '<span class="'+(pnl===null?'neutral':pnl>=0?'up':'down')+'">'+(pnl===null?'—':l2money(pnl))+'</span></div></div>'+
+ return '<div class="paper-summary">'+
+ '<div class="paper-summary-tile paper-summary-cash"><small>'+lt('cash')+'</small><strong>'+l2money(L2.paper.cash)+'</strong></div>'+
+ '<div class="paper-summary-tile paper-summary-invested"><small>'+lt('holdingsValue')+'</small><strong>'+l2money(holdingsValue)+'</strong></div></div>'+
+ '<div class="paper-summary-total"><span>'+lt('balance')+': <strong>'+l2money(total)+'</strong></span>'+
+ '<span class="'+(pnl===null?'neutral':pnl>=0?'up':'down')+'">'+lt('gain')+': '+(pnl===null?'—':l2money(pnl))+'</span></div>'+
  '<div class="sectionline"><strong>'+lt('past')+'</strong><small>'+lt('footer')+'</small></div>'+
  l2periods(L2.paperRange,'l2paperRange')+
  (chart.length>=2?l2graph(chart,L2.paperRange,pnl===null||pnl>=0?'#21c26e':'#d85159'):
