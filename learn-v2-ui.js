@@ -114,6 +114,14 @@ function l2assetDetail(){
  (pos?'<button onclick="l2openTrade(\'sell\')" '+(!l2fresh(quote)?'disabled':'')+'>'+lt('sell')+'</button>':'')+'</div>'+
  '<div class="safehint">'+(l2fresh(quote)?lt('free'):lt('error'))+' '+lt('footer')+'</div>';
 }
+function l2tradeTimeNY(iso){
+ const pieces=new Intl.DateTimeFormat('en-US',{
+  timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',
+  hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+ }).formatToParts(new Date(iso));
+ const get=k=>pieces.find(x=>x.type===k)?.value||'00';
+ return get('year')+'-'+get('month')+'-'+get('day')+'T'+get('hour')+':'+get('minute');
+}
 function l2paperHistory(){
  const trades=L2.paper.trades;
  if(!trades.length)return [];
@@ -139,7 +147,7 @@ function l2paperHistory(){
     cursors[symbol]++;
    }
   }
-  while(index<sorted.length&&sorted[index].time.slice(0,10)<=t.slice(0,10)){
+  while(index<sorted.length&&(t.includes('T')?l2tradeTimeNY(sorted[index].time)<=t.slice(0,16):sorted[index].time.slice(0,10)<=t.slice(0,10))){
    const tr=sorted[index++];
    shares[tr.symbol]=(shares[tr.symbol]||0)+(tr.side==='buy'?tr.shares:-tr.shares);
    cash+=tr.side==='buy'?-tr.amount:tr.amount;
