@@ -122,51 +122,100 @@ function l2tradeTimeNY(iso){
  const get=k=>pieces.find(x=>x.type===k)?.value||'00';
  return get('year')+'-'+get('month')+'-'+get('day')+'T'+get('hour')+':'+get('minute');
 }
+// A practice account begins with $500 of cash. Before its first purchase it
+// therefore has a real, constant value, even though no shares are held yet.
+// Transactions add observations at their actual simulated fill prices, so a
+// purchase made after the market closes can still appear on the chart.
+function l2paperTradeOnly(){
+ const trades=[...L2.paper.trades].sort((a,b)=>a.time.localeCompare(b.time));
+ if(!trades.length)return [];
+ let cash=500,held={},prices={};
+ const firstTime=l2tradeTimeNY(trades[0].time);
+ const baseline=new Date(trades[0].time).getTime()-60000;
+ const baselineNY=l2tradeTimeNY(new Date(baseline).toISOString());
+ const points=[{time:baselineNY,close:500}];
+ for(const tr of trades){
+  const time=l2tradeTimeNY(tr.time);
+  if(!(tr.price>0)||!(tr.shares>0))continue;
+  prices[tr.symbol]=tr.price;
+  held[tr.symbol]=(held[tr.symbol]||0)+(tr.side==='buy'?tr.shares:-tr.shares);
+  cash+=tr.side==='buy'?-tr.amount:tr.amount;
+  if(Object.entries(held).some(([ticker,qty])=>qty>1e-7&&!(prices[ticker]>0)))continue;
+  const value=cash+Object.entries(held).reduce((sum,[ticker,qty])=>sum+Math.max(0,qty)*(prices[ticker]||0),0);
+  if(Number.isFinite(value))points.push({time,close:value});
+ }
+ // A trade-only chart shows valuation at transaction times; it is never
+ // represented as a live intraday market-performance series.
+ return points;
+}
 function l2paperHistory(){
- const trades=L2.paper.trades;
+ const trades=[...L2.paper.trades].sort((a,b)=>a.time.localeCompare(b.time));
  if(!trades.length)return [];
  const symbols=[...new Set(trades.map(t=>t.symbol))];
  const series={};
  for(const symbol of symbols){
   const rec=L2.marketCache.get(l2key(symbol,L2.paperRange));
-  if(!rec?.bars?.length)return [];
+  if(!rec?.bars?.length)return l2paperTradeOnly();
   series[symbol]=rec.bars;
  }
- const times=[...new Set(Object.values(series).flatMap(b=>b.map(v=>v.time)))].sort();
- const first=trades[0].time.slice(0,10);
- const points=[];
- let cash=500,index=0,shares={},prices={};
- const sorted=[...trades].sort((a,b)=>a.time.localeCompare(b.time));
+ const quoteUpdates=new Map();
+ for(const symbol of symbols){
+  for(const bar of series[symbol]){
+   if(!quoteUpdates.has(bar.time))quoteUpdates.set(bar.time,{});
+   quoteUpdates.get(bar.time)[symbol]=bar.close;
+  }
+ }
+ const marketTimes=[...quoteUpdates.keys()].sort();
+ if(!marketTimes.length)return l2paperTradeOnly();
+ const firstFill=l2tradeTimeNY(trades[0].time);
+ let selectedMarketTimes=marketTimes;
+ // YTD/1Y/All begin when the paper account is first used, not years before.
+ // Keep one observation preceding the first purchase as its $500 baseline.
+ if(['YTD','1Y','All'].includes(L2.paperRange)){
+  const previous=marketTimes.filter(t=>t<firstFill).at(-1);
+  selectedMarketTimes=marketTimes.filter(t=>t>=firstFill);
+  if(previous)selectedMarketTimes.unshift(previous);
+ }
+ const firstTime=selectedMarketTimes[0]||firstFill;
+ const tradeTimes=trades.map(t=>l2tradeTimeNY(t.time)).filter(t=>t>=firstTime);
+ const times=[...new Set([...selectedMarketTimes,...tradeTimes])].sort();
  const cursors=Object.fromEntries(symbols.map(s=>[s,0]));
- for(const t of times){
-  if(t.slice(0,10)<first)continue;
+ const sortedTrades=trades.map(t=>({...t,localTime:l2tradeTimeNY(t.time)}))
+  .sort((a,b)=>a.localTime.localeCompare(b.localTime));
+ let cash=500,index=0,shares={},prices={};
+ const points=[];
+ for(const time of times){
+  // Advance each ETF/stock to the most recent actual market observation.
   for(const symbol of symbols){
-   const rows=series[symbol];
-   while(cursors[symbol]<rows.length&&rows[cursors[symbol]].time<=t){
-    prices[symbol]=rows[cursors[symbol]].close;
+   const bars=series[symbol];
+   while(cursors[symbol]<bars.length&&bars[cursors[symbol]].time<=time){
+    prices[symbol]=bars[cursors[symbol]].close;
     cursors[symbol]++;
    }
   }
-  while(index<sorted.length&&(t.includes('T')?l2tradeTimeNY(sorted[index].time)<=t.slice(0,16):sorted[index].time.slice(0,10)<=t.slice(0,10))){
-   const tr=sorted[index++];
+  while(index<sortedTrades.length&&sortedTrades[index].localTime<=time){
+   const tr=sortedTrades[index++];
    shares[tr.symbol]=(shares[tr.symbol]||0)+(tr.side==='buy'?tr.shares:-tr.shares);
    cash+=tr.side==='buy'?-tr.amount:tr.amount;
+   // The trade's recorded fill price is an observed quote, not a made-up
+   // historical bar. This correctly values trades made after market close.
+   prices[tr.symbol]=tr.price;
   }
-  const held=symbols.filter(s=>(shares[s]||0)>1e-7);
-  if(held.some(s=>!(prices[s]>0)))continue;
-  const balance=cash+held.reduce((sum,s)=>sum+shares[s]*prices[s],0);
-  if(Number.isFinite(balance))points.push({time:t,close:balance});
+  const held=symbols.filter(sym=>(shares[sym]||0)>1e-7);
+  if(held.some(sym=>!(prices[sym]>0)))continue;
+  const value=cash+held.reduce((sum,sym)=>sum+shares[sym]*prices[sym],0);
+  if(Number.isFinite(value))points.push({time,close:value});
  }
- return points;
+ return points.length>=2?points:l2paperTradeOnly();
 }
 function l2practice(){
  const positions=l2positions();
  const quoteMissing=positions.some(p=>!l2quote(p.symbol));
  const total=quoteMissing?null:L2.paper.cash+positions.reduce((sum,p)=>sum+p.qty*l2quote(p.symbol).price,0);
- const pnl=total===null?null:total-500;
+ const pnl=total===null?null:(Math.abs(total-500)<0.005?0:total-500);
  const holdings=positions.map(p=>{
   const q=l2quote(p.symbol),value=q?.price>0?p.qty*q.price:null;
-  const profit=value===null?null:value-p.cost;
+  const profit=value===null?null:(Math.abs(value-p.cost)<0.005?0:value-p.cost);
   return '<div class="holding"><span class="symicon '+(l2asset(p.symbol).kind==='etf'?'etf':'')+'">'+l2safe(p.symbol.slice(0,2))+'</span>'+
    '<button onclick="l2open(\''+p.symbol+'\')"><strong>'+l2safe(p.symbol)+'</strong><small>'+l2displayNum(p.qty,6)+' '+lt('shares')+'</small></button>'+
    '<div class="right"><strong>'+l2money(value)+'</strong><small class="'+(profit===null?'neutral':profit>=0?'up':'down')+'">'+l2money(profit)+'</small></div></div>';
@@ -184,6 +233,7 @@ function l2practice(){
  l2periods(L2.paperRange,'l2paperRange')+
  (chart.length>=2?l2graph(chart,L2.paperRange,pnl===null||pnl>=0?'#21c26e':'#d85159'):
  '<div class="empty">'+(positions.length?lt('noHistory'):lt('noHold'))+'</div>')+
+ (positions.length&&chart.length>=2&&l2paperTradeOnly().length>=2&&positions.some(p=>!L2.marketCache.get(l2key(p.symbol,L2.paperRange))?.bars?.length)?'<p class="muted">'+lt('noHistory')+' · '+lt('transactions')+'</p>':'')+
  '<div class="sectionline"><strong>'+lt('holdings')+'</strong><small>'+positions.length+'</small></div>'+
  (positions.length?holdings:'<div class="empty">'+lt('noHold')+'</div>')+
  '<div class="sectionline"><strong>'+lt('transactions')+'</strong></div>'+
