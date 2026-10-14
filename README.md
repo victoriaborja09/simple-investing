@@ -1,9 +1,9 @@
 # Simple Investing
 ### Product Requirements Document (PRD)
 
-**Stage:** Interactive MVP prototype  \
-**Product type:** Beginner-investing experience proposed for integration into an existing brokerage  \
-**Platform:** Mobile-first web prototype  \
+**Stage:** Interactive MVP prototype  
+**Product type:** Beginner-investing experience proposed for integration into an existing brokerage  
+**Platform:** Mobile-first web prototype  
 **Status:** Demonstrable product concept; not a live investment service
 
 [**Explore the prototype ↗**](https://victoriaborja09.github.io/simple-investing/) · [**View the product case study ↗**](https://victoriaborja09.github.io/simple-investing/case-study/) · [**Read the market research ↗**](https://victoriaborja09.github.io/simple-investing/case-study/market-research.html)
