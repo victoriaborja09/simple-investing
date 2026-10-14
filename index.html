@@ -1383,7 +1383,7 @@
     function amountOptions() {
       const preset=[10,25,50,100].map(amount => `
         <button type="button" class="option ${!customAmountOpen&&selectedAmount===amount?'selected':''}" onclick="selectAmount(${amount})" aria-pressed="${!customAmountOpen&&selectedAmount===amount}">
-          <strong>${amount} / ${t('perMonth')}</strong>
+          <strong>$${amount} / ${t('perMonth')}</strong>
           <span class="radio" aria-hidden="true"></span>
         </button>
       `).join('');
