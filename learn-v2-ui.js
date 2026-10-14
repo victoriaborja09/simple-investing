@@ -61,7 +61,7 @@ function l2watchlist(){
   return '<button class="watchbox '+cls+'" onclick="l2open(\''+symbol+'\')" aria-label="'+l2safe(a.name)+'">'+
    '<span class="ticker">'+l2safe(symbol)+'</span><small>'+l2safe(a.name)+'</small>'+
    '<span class="price">'+l2money(q?.price)+'</span>'+
-   '<span class="move">'+(Number.isFinite(move)?l2pct(move):lt('loading'))+'</span></button>';
+   '<span class="move">'+(Number.isFinite(move)?l2pct(move):q?lt('na'):L2.quotePending.has(symbol)?lt('loading'):lt('quoteUnavailable'))+'</span></button>';
  }).join('');
  return '<div class="sectionline"><strong>'+lt('watch')+'</strong><small>'+learnSaved.length+'</small></div>'+
  '<div class="watchgrid">'+blocks+'</div>'+
