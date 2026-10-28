@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="Creator Launchpad game controller icon">
-  <rect x="2" y="2" width="36" height="36" rx="11" fill="#2374D8"/>
-  <path d="M14 14.5h12c2.9 0 4.5 1.7 5 4.3l1.2 6.2c.5 2.7-2.6 4.2-4.3 2.3l-3-3.2H15.1l-3 3.2c-1.7 1.9-4.8.4-4.3-2.3L9 18.8c.5-2.6 2.1-4.3 5-4.3Z" fill="#fff"/>
-  <path d="M13.8 19.3h5.1M16.35 16.75v5.1" stroke="#2374D8" stroke-width="1.8" stroke-linecap="round"/>
-  <circle cx="24.2" cy="19" r="1.45" fill="#2374D8"/>
-  <circle cx="27.6" cy="21.6" r="1.45" fill="#2374D8"/>
-</svg>
